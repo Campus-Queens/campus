@@ -23,6 +23,7 @@ services:
     env: python
     buildCommand: |
       cd campus_backend
+      mkdir -p static staticfiles media
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
     startCommand: |
@@ -42,4 +43,6 @@ services:
       - key: RENDER_EXTERNAL_WS_URL
         sync: false
       - key: PYTHONPATH
-        value: /opt/render/project/src/campus_backend 
+        value: /opt/render/project/src/campus_backend
+      - key: STATIC_ROOT
+        value: /opt/render/project/src/campus_backend/staticfiles 
