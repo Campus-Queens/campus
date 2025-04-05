@@ -1,12 +1,54 @@
 services:
   - type: web
+    name: campus-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: |
+      mkdir -p campus_backend/static campus_backend/media campus_backend/staticfiles
+      pip install -r campus_backend/requirements.txt
+      python campus_backend/manage.py migrate
+      python campus_backend/manage.py collectstatic --noinput
+    startCommand: cd campus_backend && gunicorn --worker-class=uvicorn.workers.UvicornWorker --workers=4 --bind=0.0.0.0:$PORT campus.asgi:application
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: campus-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: campus-redis
+          property: connectionString
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: campus-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: campus-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: STATIC_ROOT
+        value: "/opt/render/project/src/campus_backend/staticfiles"
+      - key: MEDIA_ROOT
+        value: "/opt/render/project/src/campus_backend/media"
+
+  - type: web
     name: campus-frontend
     env: static
     buildCommand: cd campus_frontend && npm install && npm run build
     staticPublishPath: ./campus_frontend/dist
     envVars:
       - key: REACT_APP_ENV
-        value: production
+        value: "production"
       - key: REACT_APP_API_URL
         fromService:
           type: web
@@ -16,40 +58,14 @@ services:
         fromService:
           type: web
           name: campus-backend
-          envVarKey: RENDER_EXTERNAL_WS_URL
+          envVarKey: RENDER_EXTERNAL_URL
+          format: wss://${value}
 
-  - type: web
-    name: campus-backend
-    env: python
-    buildCommand: |
-      # Create necessary directories
-      mkdir -p /opt/render/project/src/campus_backend/static
-      mkdir -p /opt/render/project/src/campus_backend/staticfiles
-      mkdir -p /opt/render/project/src/campus_backend/media
-      
-      # Install dependencies
-      cd campus_backend
-      pip install -r requirements.txt
-      
-      # Collect static files using dedicated settings
-      python manage.py collectstatic --noinput --settings=campus.collect_static_settings
-    startCommand: |
-      cd campus_backend
-      gunicorn campus.wsgi:application --log-file - --log-level debug
-    envVars:
-      - key: DJANGO_SECRET_KEY
-        generateValue: true
-      - key: DJANGO_DEBUG
-        value: false
-      - key: ALLOWED_HOSTS
-        value: ".onrender.com"
-      - key: DATABASE_URL
-        value: postgresql://campusdb_taa0_user:m6BDSO4NhdUAes31CVvinPUWHREXBgPg@dpg-cvooah6mcj7s7388u6tg-a/campusdb_taa0
-      - key: RENDER_EXTERNAL_URL
-        sync: false
-      - key: RENDER_EXTERNAL_WS_URL
-        sync: false
-      - key: PYTHONPATH
-        value: /opt/render/project/src/campus_backend
-      - key: STATIC_ROOT
-        value: /opt/render/project/src/campus_backend/staticfiles 
+  - type: redis
+    name: campus-redis
+    ipAllowList: []
+    plan: free
+
+databases:
+  - name: campus-db
+    plan: free 

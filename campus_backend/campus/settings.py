@@ -25,12 +25,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'channels',
-    'api',
+    'chat_messages',
+    'chats',
+    'listings',
+    'appuser',
+    'transactions',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this for static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -39,6 +43,27 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+ROOT_URLCONF = 'campus.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'campus.wsgi.application'
+ASGI_APPLICATION = 'campus.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -65,7 +90,7 @@ STATICFILES_DIRS = [
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(str(BASE_DIR), 'media')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(str(BASE_DIR), 'media'))
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False
