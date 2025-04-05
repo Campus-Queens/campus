@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { listingsService } from '../services/listingsService';
 import { WS_URL, API_URL } from '../config';
 
 const Messages = () => {
@@ -9,421 +8,582 @@ const Messages = () => {
   const sellerId = searchParams.get('seller');
   const listingId = searchParams.get('listing');
   
-  // Add selected conversation state
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  
   const socketRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const reconnectAttemptRef = useRef(0);
+  const initialChatCreatedRef = useRef(false);
+  const maxReconnectAttempts = 5;
 
-
-  // Effect to handle new conversation from listing
+  // Effect to get current user from localStorage
   useEffect(() => {
-    const initializeConversation = async () => {
-      if (sellerId && listingId) {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    } else {
+      navigate('/signin');
+    }
+  }, [navigate]);
+
+  // Function to load messages for a conversation
+  const loadMessages = async (chatId) => {
+    try {
+      setIsLoadingMessages(true);
+      const response = await fetch(`${API_URL}/api/chats/${chatId}/messages/`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load messages');
+      }
+
+      const data = await response.json();
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+
+      // Format messages with proper sender information and isCurrentUser flag
+      const formattedMessages = data.map(msg => ({
+        id: msg.id,
+        message: msg.content,
+        timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sender: msg.sender?.name || msg.sender?.username || 'Unknown',
+        isCurrentUser: msg.sender?.id === currentUser?.id
+      }));
+
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === chatId 
+            ? { ...conv, messages: formattedMessages }
+            : conv
+        )
+      );
+
+      // Scroll to bottom after loading messages
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Function to connect WebSocket
+  const connectWebSocket = (chatId) => {
+    if (!chatId || isConnecting) return;
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+
+    try {
+      setIsConnecting(true);
+
+      // Close existing socket if any
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+
+      const wsUrl = `${WS_URL}/ws/chat/${chatId}/?token=${token}`;
+      console.log('Connecting to WebSocket:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
+      socketRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('WebSocket connected successfully');
+        setIsConnecting(false);
+        reconnectAttemptRef.current = 0;
+        // Clear any existing reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+      };
+
+      ws.onclose = (event) => {
+        console.log('WebSocket closed with code:', event.code);
+        setIsConnecting(false);
+
+        // Map close codes to user-friendly messages
+        const closeMessages = {
+          4000: 'Unexpected error occurred',
+          4001: 'Authentication token not provided',
+          4002: 'Invalid token or user not found',
+          4003: 'Chat not found',
+          4004: 'Not authorized to access this chat'
+        };
+
+        const message = closeMessages[event.code] || 'Connection closed';
+        console.log('Close reason:', message);
+
+        // Only attempt to reconnect if we haven't exceeded max attempts,
+        // it's still the selected conversation, and it's not an auth error
+        if (selectedConversation === chatId && 
+            reconnectAttemptRef.current < maxReconnectAttempts &&
+            ![4001, 4002, 4004].includes(event.code)) {
+          console.log(`Reconnection attempt ${reconnectAttemptRef.current + 1} of ${maxReconnectAttempts}`);
+          reconnectAttemptRef.current += 1;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current), 10000);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            connectWebSocket(chatId);
+          }, delay);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnecting(false);
+      };
+
+      ws.onmessage = (event) => {
         try {
-          console.log("Initializing conversation with:", { sellerId, listingId });
-          console.log("Current conversations:", conversations);
-          
-          // Fetch listing details
-          const listingDetails = await listingsService.getListing(listingId);
-          console.log("Fetched listing details:", listingDetails);
-          
-          if (!listingDetails) {
-            console.error("No listing details found");
-            return;
-          }
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
 
-          // Check if conversation already exists for this listing
-          const existingConv = conversations.find(
-            conv => conv.product?.id === parseInt(listingId)
-          );
-          
-          console.log("Existing conversation found:", existingConv);
-
-          if (existingConv) {
-            console.log("Selecting existing conversation:", existingConv.id);
-            setSelectedConversation(existingConv.id);
-          } else {
-            console.log("Creating new conversation");
-            // Create new conversation with a unique ID
-            const newConv = {
-              id: Date.now(), // Use timestamp for unique ID
-              user: {
-                name: listingDetails.seller_name || 'Seller',
-                avatar: null,
-                lastMessage: '',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              },
-              product: {
-                id: parseInt(listingId),  // Ensure ID is a number
-                title: listingDetails.title,
-                price: `$${listingDetails.price}`,
-                image: listingDetails.image ? `http://localhost:8000/media/${listingDetails.image.split('/media/')[1]}` : '/placeholder.png',
-                seller: listingDetails.seller_name
-              },
-              messages: []
-            };
-
-            console.log("New conversation object:", newConv);
-            setConversations(prev => {
-              // Double check we're not adding a duplicate
-              const isDuplicate = prev.some(conv => conv.product?.id === parseInt(listingId));
-              console.log("Is duplicate check:", isDuplicate);
-              if (isDuplicate) {
-                return prev;
-              }
-              return [...prev, newConv];
-            });
-            setSelectedConversation(newConv.id);
+          if (data.type === 'chat_message') {
+            const currentUserData = JSON.parse(localStorage.getItem('user'));
+            setConversations(prev => 
+              prev.map(conv => {
+                if (conv.id === chatId) {
+                  // Check if message already exists to prevent duplicates
+                  if (conv.messages?.some(msg => msg.id === data.message_id)) {
+                    return conv;
+                  }
+                  const newMessage = {
+                    id: data.message_id,
+                    message: data.message,
+                    timestamp: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    sender: data.sender?.name || data.sender?.username || 'Unknown',
+                    isCurrentUser: currentUserData?.id === data.sender_id
+                  };
+                  return {
+                    ...conv,
+                    messages: [...(conv.messages || []), newMessage]
+                  };
+                }
+                return conv;
+              })
+            );
+            // Scroll to bottom after new message
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          } else if (data.type === 'chat_history') {
+            const currentUserData = JSON.parse(localStorage.getItem('user'));
+            setConversations(prev =>
+              prev.map(conv => {
+                if (conv.id === chatId) {
+                  const formattedMessages = data.messages.map(msg => ({
+                    id: msg.message_id,
+                    message: msg.message,
+                    timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    sender: msg.sender?.name || msg.sender?.username || 'Unknown',
+                    isCurrentUser: currentUserData?.id === msg.sender_id
+                  }));
+                  return {
+                    ...conv,
+                    messages: formattedMessages
+                  };
+                }
+                return conv;
+              })
+            );
+            // Scroll to bottom after loading history
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
           }
         } catch (error) {
-          console.error('Error initializing conversation:', error);
+          console.error('Error handling WebSocket message:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up WebSocket:', error);
+      setIsConnecting(false);
+    }
+  };
+
+  // Update the conversation selection handler
+  const handleConversationSelect = (chatId) => {
+    if (chatId === selectedConversation) return; // Don't reselect if already selected
+    setSelectedConversation(chatId);
+    loadMessages(chatId);
+    reconnectAttemptRef.current = 0; // Reset reconnection attempts
+    connectWebSocket(chatId);
+  };
+
+  // Update the message sending handler
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const messageData = {
+      type: 'chat_message',
+      message: newMessage.trim()
+    };
+
+    try {
+      socketRef.current.send(JSON.stringify(messageData));
+      console.log('Message sent:', messageData);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      initialChatCreatedRef.current = false;
+    };
+  }, []);
+
+  // Effect to reconnect WebSocket when token changes
+  useEffect(() => {
+    if (selectedConversation && currentUser) {
+      connectWebSocket(selectedConversation);
+    }
+  }, [currentUser]);
+
+  // Add effect to handle initial chat creation when coming from a listing
+  useEffect(() => {
+    const createInitialChat = async () => {
+      if (listingId && sellerId && !initialChatCreatedRef.current) {
+        try {
+          initialChatCreatedRef.current = true;
+          const response = await fetch(`${API_URL}/api/chats/`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              listing: listingId
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to create chat');
+          }
+
+          const chat = await response.json();
+          console.log('Created/Retrieved chat:', chat);
+
+          // Add the new chat to conversations if it doesn't exist
+          setConversations(prev => {
+            if (!prev.find(conv => conv.id === chat.id)) {
+              const currentUser = JSON.parse(localStorage.getItem('user'));
+              const isCurrentUserSeller = chat.seller === currentUser.id;
+              
+              // Format the chat data
+              const formattedChat = {
+                id: chat.id,
+                user: {
+                  name: isCurrentUserSeller
+                    ? chat.buyer_details?.name || chat.buyer_details?.username || 'Buyer'
+                    : chat.seller_details?.name || chat.seller_details?.username || 'Seller',
+                  avatar: isCurrentUserSeller
+                    ? chat.buyer_details?.profile_picture
+                    : chat.seller_details?.profile_picture,
+                  lastMessage: '',
+                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                },
+                product: {
+                  id: chat.listing,
+                  title: chat.listing_details?.title || 'Item',
+                  price: `$${chat.listing_details?.price || '0'}`,
+                  image: chat.listing_details?.image 
+                    ? `${API_URL}/media/${chat.listing_details.image.split('/media/')[1]}`
+                    : '/placeholder.png',
+                  seller: chat.seller_details?.name || chat.seller_details?.username || 'Seller'
+                },
+                messages: []
+              };
+              return [...prev, formattedChat];
+            }
+            return prev;
+          });
+
+          // Select the new conversation
+          setSelectedConversation(chat.id);
+          loadMessages(chat.id);
+          connectWebSocket(chat.id);
+        } catch (error) {
+          console.error('Error creating initial chat:', error);
+          initialChatCreatedRef.current = false;
         }
       }
     };
 
-    initializeConversation();
-  }, [sellerId, listingId, conversations]); // Added conversations to dependencies
+    createInitialChat();
+  }, [listingId, sellerId]);
 
-
-
+  // Add effect to load existing chats
   useEffect(() => {
-    if (!selectedConversation) return;
-    console.log(`🔄 Attempting WebSocket connection for conversation: ${selectedConversation}`);
-  
-    // Close existing WebSocket if open
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-  
-    // Create a new WebSocket connection
-    const token = localStorage.getItem("access_token");
-    const ws = new WebSocket(`${WS_URL}/ws/chat/${selectedConversation}/?token=${token}`);
-    socketRef.current = ws;
-  
-    ws.onopen = () => {console.log("✅ Connected to WebSocket");};
-  
-    ws.onerror = (error) => {console.error("❌ WebSocket Error:", error);};
-
-    ws.onmessage = (event) => {
-      console.log("📩 WebSocket message received:", event.data);
+    const loadExistingChats = async () => {
       try {
-        const data = JSON.parse(event.data);
-        console.log("✅ Parsed message:", data);
-    
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === selectedConversation
-              ? {
-                  ...conv,
-                  messages: [...conv.messages, data],
-                  user: {
-                    ...conv.user,
-                    lastMessage: data.message,
-                    timestamp: data.timestamp,
-                  },
-                }
-              : conv
-          )
-        );
+        console.log('Loading existing chats...');
+        // Fetch existing chats
+        const response = await fetch(`${API_URL}/api/chats/`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to load chats');
+        }
+
+        const existingChats = await response.json();
+        console.log('Received chats:', existingChats);
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+
+        // Format the chats with all necessary details
+        const formattedChats = existingChats.map(chat => {
+          const isCurrentUserSeller = chat.seller === currentUser.id;
+          
+          return {
+            id: chat.id,
+            user: {
+              name: isCurrentUserSeller
+                ? chat.buyer_details?.name || chat.buyer_details?.username || 'Buyer'
+                : chat.seller_details?.name || chat.seller_details?.username || 'Seller',
+              avatar: isCurrentUserSeller
+                ? chat.buyer_details?.profile_picture
+                : chat.seller_details?.profile_picture,
+              lastMessage: '',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            },
+            product: {
+              id: chat.listing,
+              title: chat.listing_details?.title || 'Item',
+              price: `$${chat.listing_details?.price || '0'}`,
+              image: chat.listing_details?.image 
+                ? `${API_URL}/media/${chat.listing_details.image.split('/media/')[1]}`
+                : '/placeholder.png',
+              seller: chat.seller_details?.name || chat.seller_details?.username || 'Seller'
+            },
+            messages: []
+          };
+        });
+
+        console.log('Formatted chats:', formattedChats);
+        setConversations(formattedChats);
+
+        // If there's a selected conversation, load its messages
+        if (selectedConversation) {
+          loadMessages(selectedConversation);
+        }
       } catch (error) {
-        console.error("❌ Error parsing WebSocket message:", error);
+        console.error('Error loading existing chats:', error);
       }
     };
-  
-    ws.onclose = () => {console.log("⚠️ WebSocket Disconnected");};
-  
-    // Cleanup function: Close WebSocket on component unmount or when `selectedConversation` changes
-    return () => {
-      console.log("🔌 Closing WebSocket...");
-      ws.close();
-    };
-  }, [selectedConversation]); // Only depend on `selectedConversation`
-  
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !socketRef.current) return;
-
-   
-    const messageData = { message: newMessage.trim() };
-    console.log("📤 Sending message:", messageData)
-    try {
-      socketRef.current.send(JSON.stringify(messageData));
-      console.log("✅ Message sent successfully");
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
+    if (currentUser) {
+      loadExistingChats();
     }
-    setNewMessage("");
-  };
-
+  }, [currentUser]); // Only reload when currentUser changes
 
   // Auto-scroll to bottom when new message is added
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-    }, [conversations]);
+  }, [conversations]);
 
-    const currentConversation = conversations.find(
-      (conv) => conv.id === selectedConversation
-    );
-    
-    if (!currentConversation && conversations.length === 0) {
-      return (
-        <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto mb-4 text-gray-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
-            <div
-              onClick={() => navigate('/profile')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none transition-colors"
-            >
-              Start Conversation
-            </div>
-          </div>
-        </div>
-      );
-    }
+  const currentConversation = conversations.find(
+    (conv) => conv.id === selectedConversation
+  );
 
-    if (!currentConversation) {
-      return (
-        <div className="flex h-[calc(100vh-64px)] bg-gray-50">
-          {/* Left Panel - Conversations */}
-          <div className="w-[60px] sm:w-[220px] bg-white border-r border-gray-200 relative">
-            <div className="p-4 border-b border-gray-200 hidden sm:block">
-              <h2 className="text-xl font-medium text-gray-900">Messages</h2>
-            </div>
-            <div className="overflow-y-auto h-[calc(100vh-112px)] pb-16 sm:pb-0">
-              {/* New Conversation Icon */}
-              <div
-                onClick={() => navigate('/')}
-                className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-12 w-12 sm:h-8 sm:w-8 rounded-full bg-black flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 sm:w-4 sm:h-4 text-white">
-                          <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-3 min-w-0 flex-1 hidden sm:block">
-                      <div className="flex items-baseline justify-between">
-                        <p className="text-sm font-medium text-gray-900">New Conversation</p>
-                      </div>
-                      <p className="text-sm text-gray-500 truncate mt-1">
-                        Browse listings to start chatting
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {conversations.map((conversation, index) => (
-                <div
-                  key={`${conversation.id}-${index}`}
-                  onClick={() => setSelectedConversation(conversation.id)}
-                  className={`border-b border-gray-200 hover:bg-gray-50 cursor-pointer ${
-                    selectedConversation === conversation.id ? 'bg-gray-50' : ''
-                  }`}
-                >
-                  <div className="p-4">
-                    <div className="flex items-start justify-center">
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 sm:h-8 sm:w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-lg sm:text-sm font-medium text-gray-600">
-                            {conversation.user.name[0]}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-3 min-w-0 flex-1 hidden sm:block">
-                        <div className="flex items-baseline justify-between">
-                          <p className="text-sm font-medium text-gray-900 truncate">{conversation.user.name}</p>
-                          <p className="text-xs text-gray-500 ml-2 flex-shrink-0">{conversation.user.timestamp}</p>
-                        </div>
-                        <p className="text-sm text-gray-500 truncate mt-1">
-                          {conversation.user.lastMessage}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 items-center justify-center hidden sm:flex">
-            <div className="text-center text-gray-500">
-              <p>Select a conversation to start messaging</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-  return (
-    <div className="flex h-[calc(100vh-64px)] bg-gray-50">
-      {/* Left Panel - Conversations */}
-      <div className="w-[60px] sm:w-[220px] bg-white border-r border-gray-200 relative">
-        <div className="p-4 border-b border-gray-200 hidden sm:block">
-          <h2 className="text-xl font-medium text-gray-900">Messages</h2>
-        </div>
-        <div className="overflow-y-auto h-[calc(100vh-112px)] pb-16 sm:pb-0">
-          {/* New Conversation Icon */}
+  // Render empty state when no conversations
+  if (!currentConversation && conversations.length === 0 && !listingId) {
+    return (
+      <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto mb-4 text-gray-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
           <div
-            onClick={() => navigate('/')}
-            className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+            onClick={() => navigate('/listings')}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none transition-colors"
           >
-            <div className="p-4">
-              <div className="flex items-start justify-center">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 sm:h-8 sm:w-8 rounded-full bg-black flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 sm:w-4 sm:h-4 text-white">
-                      <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3 min-w-0 flex-1 hidden sm:block">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-sm font-medium text-gray-900">New Conversation</p>
-                  </div>
-                  <p className="text-sm text-gray-500 truncate mt-1">
-                    Browse listings to start chatting
-                  </p>
-                </div>
-              </div>
-            </div>
+            Browse Listings
           </div>
-          {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 hidden sm:flex">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mb-3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-              </svg>
-              <p className="text-lg font-medium mb-1">No Messages Yet</p>
-              <p className="text-sm text-center">Time to make some friends! Start by browsing listings and reaching out to sellers.</p>
-            </div>
-          ) : (
-            conversations.map((conversation, index) => (
-              <div
-                key={`${conversation.id}-${index}`}
-                onClick={() => setSelectedConversation(conversation.id)}
-                className={`border-b border-gray-200 hover:bg-gray-50 cursor-pointer ${
-                  selectedConversation === conversation.id ? 'bg-gray-50' : ''
-                }`}
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-12 w-12 sm:h-8 sm:w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-lg sm:text-sm font-medium text-gray-600">
-                          {conversation.user.name[0]}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3 min-w-0 flex-1 hidden sm:block">
-                      <div className="flex items-baseline justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">{conversation.user.name}</p>
-                        <p className="text-xs text-gray-500 ml-2 flex-shrink-0">{conversation.user.timestamp}</p>
-                      </div>
-                      <p className="text-sm text-gray-500 truncate mt-1">
-                        {conversation.user.lastMessage}
-                      </p>
-                    </div>
-                  </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render loading state when creating new conversation
+  if (!currentConversation && listingId) {
+    return (
+      <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900">Creating conversation...</h3>
+        </div>
+      </div>
+    );
+  }
+
+  // Render main chat interface
+  return (
+    <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
+      {/* Conversations List */}
+      <div className="w-1/3 border-r border-gray-200 bg-white overflow-y-auto">
+        <div className="p-4">
+          <h2 className="text-2xl font-bold mb-4">Messages</h2>
+          {conversations.map((conversation) => (
+            <div
+              key={conversation.id}
+              onClick={() => handleConversationSelect(conversation.id)}
+              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                selectedConversation === conversation.id ? 'bg-gray-50' : ''
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                  {conversation.user.avatar ? (
+                    <img 
+                      src={`${API_URL}${conversation.user.avatar}`} 
+                      alt={conversation.user.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl font-medium text-gray-600">
+                      {conversation.user.name[0].toUpperCase()}
+                    </span>
+                  )}
                 </div>
+                <div className="flex-1">
+                  <h3 className="font-medium">{conversation.user.name}</h3>
+                  <p className="text-sm text-gray-500">{conversation.product.title}</p>
+                </div>
+                <span className="text-xs text-gray-400">{conversation.user.timestamp}</span>
               </div>
-            ))
-          )}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Right Panel - Product and Messages */}
-      {currentConversation && (
-        <div className="flex-1 flex flex-col bg-white">
-          {/* Product Details */}
-          <div className="px-4 py-3 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-[72px] h-[72px] bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                {currentConversation.product.image ? (
-                  <img
-                    src={currentConversation.product.image}
-                    alt={currentConversation.product.title}
-                    className="w-full h-full object-cover rounded"
-                  />
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <h2 className="text-base font-medium text-gray-900">
-                  {currentConversation.product.title}
-                </h2>
-                <p className="text-sm text-gray-900">{currentConversation.product.price}</p>
-                <p className="text-sm text-gray-500">
-                  Seller: {currentConversation.product.seller}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Messages Thread */}
-            <div id="messages-container" className="flex-1 overflow-y-auto px-4 py-3">
-              {currentConversation.messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex mb-2 ${
-                    message.isSender ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`inline-block rounded-2xl px-3 py-2 max-w-[75%] ${
-                      message.isSender
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <p
-                      className={`text-[11px] mt-1 ${
-                        message.isSender ? 'text-blue-100' : 'text-gray-400'
-                      }`}
-                    >
-                      {message.timestamp}
-                    </p>
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {selectedConversation ? (
+          <>
+            {/* Chat Header */}
+            {currentConversation && (
+              <div className="p-4 border-b border-gray-200 bg-white">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    {currentConversation.product.image ? (
+                      <img 
+                        src={currentConversation.product.image}
+                        alt={currentConversation.product.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-medium text-gray-600">
+                        {currentConversation.product.title[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{currentConversation.product.title}</h3>
+                    <p className="text-sm text-gray-500">{currentConversation.product.price}</p>
                   </div>
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {isLoadingMessages ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                currentConversation?.messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        message.isCurrentUser
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      {!message.isCurrentUser && (
+                        <p className="text-xs font-medium mb-1">{message.sender}</p>
+                      )}
+                      <p>{message.message}</p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          message.isCurrentUser ? 'text-gray-300' : 'text-gray-500'
+                        }`}
+                      >
+                        {message.timestamp}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 bg-white px-4 py-3 mb-16 sm:mb-0">
-              <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+            <div className="p-4 border-t border-gray-200 bg-white">
+              <form onSubmit={handleSendMessage} className="flex space-x-4">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:border-black"
                 />
                 <button
                   type="submit"
-                  className="bg-black text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition"
+                  className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Send
                 </button>
               </form>
             </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-gray-500">Select a conversation to start messaging</p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
