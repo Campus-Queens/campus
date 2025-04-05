@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: campus-frontend
+    env: static
+    buildCommand: cd campus_frontend && npm install && npm run build
+    staticPublishPath: ./campus_frontend/dist
+    envVars:
+      - key: REACT_APP_ENV
+        value: production
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: campus-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: REACT_APP_WS_URL
+        fromService:
+          type: web
+          name: campus-backend
+          envVarKey: RENDER_EXTERNAL_WS_URL
+
+  - type: web
+    name: campus-backend
+    env: python
+    buildCommand: cd campus_backend && pip install -r requirements.txt
+    startCommand: cd campus_backend && gunicorn campus.wsgi:application
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        value: postgresql://campusdb_taa0_user:m6BDSO4NhdUAes31CVvinPUWHREXBgPg@dpg-cvooah6mcj7s7388u6tg-a/campusdb_taa0
+      - key: RENDER_EXTERNAL_URL
+        sync: false
+      - key: RENDER_EXTERNAL_WS_URL
+        sync: false 
