@@ -22,10 +22,18 @@ services:
     name: campus-backend
     env: python
     buildCommand: |
+      # Create necessary directories
+      mkdir -p campus_backend/static campus_backend/staticfiles campus_backend/media
+      
+      # Install dependencies
       cd campus_backend
-      mkdir -p static staticfiles media
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput
+      
+      # Collect static files
+      DJANGO_DEBUG=False \
+      STATIC_ROOT=/opt/render/project/src/campus_backend/staticfiles \
+      ALLOWED_HOSTS=.onrender.com \
+      python manage.py collectstatic --noinput --clear
     startCommand: |
       cd campus_backend
       gunicorn campus.wsgi:application --log-file - --log-level debug
