@@ -27,8 +27,7 @@ services:
       python manage.py collectstatic --noinput
     startCommand: |
       cd campus_backend
-      export PYTHONPATH=$PYTHONPATH:$(pwd)
-      gunicorn --chdir campus_backend campus.wsgi:application --log-file -
+      gunicorn campus.wsgi:application --log-file - --log-level debug
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
@@ -41,4 +40,6 @@ services:
       - key: RENDER_EXTERNAL_URL
         sync: false
       - key: RENDER_EXTERNAL_WS_URL
-        sync: false 
+        sync: false
+      - key: PYTHONPATH
+        value: /opt/render/project/src/campus_backend 
