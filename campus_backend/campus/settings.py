@@ -58,14 +58,14 @@ DATABASE_CONNECTION_HEALTH_CHECK = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = os.environ.get('STATIC_ROOT', os.path.join(BASE_DIR, 'staticfiles'))
+STATIC_ROOT = os.environ.get('STATIC_ROOT', os.path.join(str(BASE_DIR), 'staticfiles'))
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(str(BASE_DIR), 'static'),
 ]
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(str(BASE_DIR), 'media')
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False
@@ -99,8 +99,8 @@ if not DEBUG:
 # Whitenoise configuration for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Create required directories if they don't exist
-for directory in [STATIC_ROOT, MEDIA_ROOT, os.path.join(BASE_DIR, 'static')]:
+# Create directories
+for directory in [STATIC_ROOT, MEDIA_ROOT] + STATICFILES_DIRS:
     os.makedirs(directory, exist_ok=True)
 
 # Default primary key field type
