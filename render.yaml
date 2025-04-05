@@ -8,13 +8,13 @@ services:
       cd campus_backend
       pip install -r requirements.txt
       mkdir -p static media staticfiles
-      export PYTHONPATH=$PYTHONPATH:$(pwd)
+      export DJANGO_SETTINGS_MODULE=campus_backend.settings
       python manage.py migrate
       python manage.py collectstatic --noinput
-    startCommand: cd campus_backend && gunicorn --worker-class=uvicorn.workers.UvicornWorker --workers=4 --bind=0.0.0.0:$PORT campus.asgi:application
+    startCommand: cd campus_backend && gunicorn --worker-class=uvicorn.workers.UvicornWorker --workers=4 --bind=0.0.0.0:$PORT campus_backend.asgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
-        value: "campus.settings"
+        value: "campus_backend.settings"
       - key: PYTHONPATH
         value: "/opt/render/project/src/campus_backend"
       - key: DJANGO_SECRET_KEY
