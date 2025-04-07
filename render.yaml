@@ -5,15 +5,14 @@ services:
     region: oregon
     plan: free
     buildCommand: |
-      cd campus_backend
       pip install -r requirements.txt
-      mkdir -p static media staticfiles
-      python manage.py migrate
+      cd campus_backend
       python manage.py collectstatic --noinput
+      python manage.py migrate
     startCommand: cd campus_backend && gunicorn --worker-class=uvicorn.workers.UvicornWorker --workers=4 --bind=0.0.0.0:$PORT campus_backend.asgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
-        value: "campus_backend.settings"
+        value: "campus_backend.production_settings"
       - key: PYTHONPATH
         value: "/opt/render/project/src/campus_backend"
       - key: DJANGO_SECRET_KEY
