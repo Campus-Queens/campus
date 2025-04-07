@@ -1,20 +1,20 @@
 from rest_framework import serializers
-from .models import *
-from appuser.models import AppUser
+from django.contrib.auth import get_user_model
+from .models import Listing, BookListing, SubletListing, Roommates, RideShare, EventsAndOther
+
+User = get_user_model()  # Dynamically get your AppUser model
 
 class SellerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AppUser
+        model = User
         fields = ['id', 'name', 'username', 'created_at', 'profile_picture']
-
 
 class ListingSerializer(serializers.ModelSerializer):
     seller = SellerSerializer(read_only=True)
 
-
     class Meta:
         model = Listing
-        fields = '__all__'  # Exports all fields
+        fields = '__all__'
 
     def get_seller_name(self, obj):
         if obj.seller:
