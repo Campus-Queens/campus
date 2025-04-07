@@ -14,7 +14,7 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: "campus_backend.production_settings"
       - key: PYTHONPATH
-        value: "/opt/render/project/src/campus_backend"
+        value: "/opt/render/project/src"
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DJANGO_DEBUG
@@ -44,6 +44,12 @@ services:
         value: "/opt/render/project/src/campus_backend/staticfiles"
       - key: MEDIA_ROOT
         value: "/opt/render/project/src/campus_backend/media"
+      - key: EMAIL_HOST_USER
+        value: campus.queensuniversity@gmail.com
+      - key: EMAIL_HOST_PASSWORD
+        value: pgcbjdoltqaubnob
+      - key: DEFAULT_FROM_EMAIL
+        value: campus.queensuniversity@gmail.com
 
   - type: web
     name: campus-frontend

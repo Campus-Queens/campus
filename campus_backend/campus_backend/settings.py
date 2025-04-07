@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,19 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT", os.path.join(BASE_DIR, "media"))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-roiz%tvkj816i(m*&g=yl-g5a&$j4z!*fn&=o#)18h70w^7*qf"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.40.47', '0.0.0.0']
 
 
 # Application definition
@@ -64,15 +63,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-            "capacity": 1500,
-            "expiry": 10,
-            "channel_capacity": {
-                "http.request": 100,
-                "http.response": 100,
-                "websocket.send": 100,
-                "websocket.receive": 100
-            }
+            "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379')],
         },
     },
 }
@@ -86,7 +77,7 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -94,9 +85,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True  # For testing only, restrict later
-CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-CORS_ALLOW_HEADERS = ["*"]
+CORS_ALLOWED_ORIGINS = [os.getenv('FRONTEND_URL', 'http://localhost:5173')]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "campus_backend.urls"
 
@@ -123,14 +113,7 @@ WSGI_APPLICATION = "campus_backend.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "campus_marketplace",
-        "USER": "campus",
-        "PASSWORD": "campus123",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
+    "default": dj_database_url.config(conn_max_age=600, ssl_require=True)
 }
 
 # Password validation
@@ -166,11 +149,13 @@ USE_I18N = True
 
 USE_TZ = True
 
+STATIC_ROOT = os.environ.get("STATIC_ROOT", os.path.join(BASE_DIR, "staticfiles"))
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = 'static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -182,9 +167,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'campus.queensuniversity@gmail.com'
-EMAIL_HOST_PASSWORD = 'pgcbjdoltqaubnob'
-DEFAULT_FROM_EMAIL = 'campus.queensuniversity@gmail.com'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
 
 # Frontend URL for email verification and password reset
-FRONTEND_URL = 'http://localhost:5173'  # Updated to match Vite's default port
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Security settings
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
