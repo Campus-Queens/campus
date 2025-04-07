@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-
+from appuser.models import AppUser
 
 class SellerSerializer(serializers.ModelSerializer):
     class Meta:
