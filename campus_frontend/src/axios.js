@@ -23,17 +23,25 @@ const API = axios.create({
 // Add request interceptor for logging and auth
 API.interceptors.request.use(
     (config) => {
-        // Add /api prefix for listings and chats endpoints
-        if (config.url.startsWith('listings/') || config.url.startsWith('chats/')) {
+        // Clean up any double slashes in the URL
+        config.url = config.url.replace(/\/+/g, '/');
+        
+        // Add /api prefix for listings and chats endpoints, but not for appuser
+        if (!config.url.startsWith('appuser/') && (config.url.includes('listings/') || config.url.includes('chats/'))) {
             config.url = 'api/' + config.url;
         }
         
+        // Remove any leading slash to prevent double slashes
+        config.url = config.url.replace(/^\/+/, '');
+        
         // Enhanced request logging
+        const fullUrl = `${config.baseURL}/${config.url}`;
         console.log('Making API request:', {
-            fullUrl: `${config.baseURL}/${config.url}`,
+            fullUrl,
             method: config.method,
             baseURL: config.baseURL,
-            url: config.url
+            url: config.url,
+            data: config.data
         });
 
         const token = localStorage.getItem('access_token');
