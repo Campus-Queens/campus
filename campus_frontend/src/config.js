@@ -8,8 +8,8 @@ const getApiConfig = () => {
       WS_URL: 'ws://localhost:8000'
     },
     production: {
-      API_URL: process.env.REACT_APP_API_URL || 'https://api.yourcampusapp.com',
-      WS_URL: process.env.REACT_APP_WS_URL || 'wss://api.yourcampusapp.com'
+      API_URL: 'https://campus-backend-if2p.onrender.com',
+      WS_URL: 'wss://campus-backend-if2p.onrender.com'
     }
   };
 
