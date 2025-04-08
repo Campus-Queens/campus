@@ -43,7 +43,7 @@ const Register = () => {
     }
 
     try {
-      const response = await API.post('/appuser/create-user/', {
+      const response = await API.post('appuser/create-user/', {
         username: `${firstName} ${lastName}`,
         email,
         password,
