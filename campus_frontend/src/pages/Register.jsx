@@ -35,8 +35,6 @@ const Register = () => {
       return;
     }
 
-    console.log("Password:", password);
-    console.log("Confirm Password:", confirmPassword);
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -55,7 +53,9 @@ const Register = () => {
       window.dispatchEvent(new Event('authChange'));
       navigate("/signin"); // Redirect to sign-in after successful registration
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed. Please try again.");
+      console.error('Registration error:', err);
+      setError(err.response?.data?.detail || err.response?.data?.error || "Registration failed. Please try again.");
+      setLoading(false);
     }
   };
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_URL } from './config';
 
 // Ensure we have a valid API_URL, fallback to production if undefined
-const baseURL = API_URL || 'https://campus-backend-if2p.onrender.com/api';
+const baseURL = API_URL || 'https://campus-backend-if2p.onrender.com';
 
 console.log('API Configuration:', {
     configuredApiUrl: API_URL,
@@ -23,9 +23,14 @@ const API = axios.create({
 // Add request interceptor for logging and auth
 API.interceptors.request.use(
     (config) => {
+        // Add /api prefix for listings and chats endpoints
+        if (config.url.startsWith('listings/') || config.url.startsWith('chats/')) {
+            config.url = 'api/' + config.url;
+        }
+        
         // Enhanced request logging
         console.log('Making API request:', {
-            fullUrl: `${config.baseURL}${config.url}`,
+            fullUrl: `${config.baseURL}/${config.url}`,
             method: config.method,
             baseURL: config.baseURL,
             url: config.url
