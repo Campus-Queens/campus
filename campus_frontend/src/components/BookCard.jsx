@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 const BookCard = ({ id, title, course_code, price, condition, image, author, edition, category, seller_name, seller_id }) => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
 
   // Handle image URL
   const placeholderImage = "/placeholder.png";
-  const imageUrl = image ? `http://localhost:8000/media/${image.split('/media/')[1]}` : placeholderImage;
+  const imageUrl = image ? `${API_URL.replace('/api', '')}/media/${image.split('/media/')[1]}` : placeholderImage;
 
   const handleClick = () => {
     // Scroll to top before navigating

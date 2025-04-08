@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from '../axios';
 import ShowHideButton from "../components/ShowHideButton";
 
 
@@ -15,6 +15,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => {
     if (!email.endsWith("@queensu.ca")) {
@@ -27,6 +28,8 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     
     if (!validateEmail(email)) {
       return;
@@ -40,20 +43,14 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/appuser/create-user/", 
-        { 
-          name: `${firstName} ${lastName}`,
-          email, 
-          password,
-          year: 2
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }
-        }
-      );
+      const response = await API.post('/appuser/create-user/', {
+        username: `${firstName} ${lastName}`,
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        year: 2
+      });
       // Dispatch auth change event
       window.dispatchEvent(new Event('authChange'));
       navigate("/signin"); // Redirect to sign-in after successful registration

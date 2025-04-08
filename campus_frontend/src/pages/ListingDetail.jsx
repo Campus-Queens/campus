@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../axios';
 import ShareModal from '../components/ShareModal';
 import BookCard from '../components/BookCard';
+import { API_URL } from '../config';
 
 const ListingDetail = () => {
   const { id } = useParams();
@@ -131,7 +132,7 @@ const ListingDetail = () => {
 
   if (!listing) return null;
 
-  const imageUrl = listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png";
+  const imageUrl = listing.image ? `${API_URL.replace('/api', '')}/media/${listing.image.split('/media/')[1]}` : "/placeholder.png";
 
   const getConditionBadgeColor = (condition) => {
     if (!condition) return "bg-gray-100 text-gray-800"; 
@@ -316,7 +317,7 @@ const ListingDetail = () => {
                       <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
                       {listing.seller?.profile_picture ? (
                         <img
-                          src={`http://localhost:8000${listing.seller.profile_picture}`}
+                          src={`${API_URL.replace('/api', '')}${listing.seller.profile_picture}`}
                           alt={listing.seller?.username || 'Seller'}
                           className="h-12 w-12 rounded-full object-cover"
                         />

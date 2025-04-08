@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../axios";
 import EditProfileModal from "../components/EditProfileModal";
+import { API_URL } from '../config';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -178,7 +179,7 @@ const Profile = () => {
                 <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
               ) : user?.profile_picture ? (
                 <img
-                  src={`http://localhost:8000${user.profile_picture}`}
+                  src={`${API_URL.replace('/api', '')}${user.profile_picture}`}
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />
@@ -317,7 +318,7 @@ const Profile = () => {
                       onClick={() => navigate(`/listing/${listing.id}`)}
                     >
                       <img 
-                        src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
+                        src={listing.image ? `${API_URL.replace('/api', '')}/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
                         alt={listing.title} 
                         className="w-full h-48 object-cover"
                       />
