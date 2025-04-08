@@ -1,14 +1,14 @@
-// Environment-specific configuration
+// config.js
 const getApiConfig = () => {
   const env = process.env.REACT_APP_ENV || 'development';
   
   const configs = {
     development: {
-      API_URL: 'http://localhost:8000/api',
+      API_URL: 'http://localhost:8000',
       WS_URL: 'ws://localhost:8000'
     },
     production: {
-      API_URL: 'https://campus-backend-if2p.onrender.com/api',
+      API_URL: 'https://campus-backend-if2p.onrender.com',
       WS_URL: 'wss://campus-backend-if2p.onrender.com'
     }
   };
