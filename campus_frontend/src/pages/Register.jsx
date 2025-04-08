@@ -42,12 +42,13 @@ const Register = () => {
 
     try {
       const response = await API.post('appuser/create-user/', {
-        username: `${firstName} ${lastName}`,
+        name: `${firstName} ${lastName}`,
         email,
         password,
-        first_name: firstName,
-        last_name: lastName,
-        year: 2
+        year: 2,
+        bio: '',
+        location: '',
+        username: `${firstName.toLowerCase()}_${lastName.toLowerCase()}`
       });
       // Dispatch auth change event
       window.dispatchEvent(new Event('authChange'));
