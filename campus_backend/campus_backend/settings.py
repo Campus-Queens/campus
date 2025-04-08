@@ -31,7 +31,11 @@ MEDIA_ROOT = os.environ.get("MEDIA_ROOT", os.path.join(BASE_DIR, "media"))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [
+    "campus-backend-if2p.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 
@@ -85,7 +89,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = [os.getenv('FRONTEND_URL', 'http://localhost:5173')]
+CORS_ALLOWED_ORIGINS = [
+    "https://campus-frontend-minn.onrender.com",
+    "http://localhost:5173"
+]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "campus_backend.urls"
