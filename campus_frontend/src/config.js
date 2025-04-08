@@ -1,12 +1,9 @@
-const getApiConfig = () => {
-  const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = import.meta.env.MODE === 'production';
 
-  return {
-    API_URL: isProduction
-      ? process.env.REACT_APP_API_URL
-      : 'http://localhost:8000/api',
-    WS_URL: isProduction
-      ? process.env.REACT_APP_WS_URL
-      : 'ws://localhost:8000'
-  };
-};
+export const API_URL = isProduction
+  ? import.meta.env.VITE_API_URL
+  : 'http://localhost:8000/api';
+
+export const WS_URL = isProduction
+  ? import.meta.env.VITE_WS_URL
+  : 'ws://localhost:8000';
