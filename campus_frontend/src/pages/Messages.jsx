@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { WS_URL, API_URL } from '../config';
+import API from '../axios';
 
 const Messages = () => {
   const [searchParams] = useSearchParams();
@@ -36,22 +37,11 @@ const Messages = () => {
   const loadMessages = async (chatId) => {
     try {
       setIsLoadingMessages(true);
-      const response = await fetch(`${API_URL}/api/chats/${chatId}/messages/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await API.get(`chats/${chatId}/messages/`);
 
-      if (!response.ok) {
-        throw new Error('Failed to load messages');
-      }
-
-      const data = await response.json();
       const currentUser = JSON.parse(localStorage.getItem('user'));
 
-      // Format messages with proper sender information and isCurrentUser flag
-      const formattedMessages = data.map(msg => ({
+      const formattedMessages = response.data.map(msg => ({
         id: msg.id,
         message: msg.content,
         timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -67,7 +57,6 @@ const Messages = () => {
         )
       );
 
-      // Scroll to bottom after loading messages
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
@@ -276,40 +265,20 @@ const Messages = () => {
       if (listingId && sellerId && !initialChatCreatedRef.current) {
         try {
           initialChatCreatedRef.current = true;
-          const response = await fetch(`${API_URL}/api/chats/`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              listing: listingId
-            })
+          const response = await API.post('chats/', {
+            listing: listingId
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to create chat');
-          }
-
-          const chat = await response.json();
+          const chat = response.data;
           console.log('Created/Retrieved chat:', chat);
 
-          // Add the new chat to conversations if it doesn't exist
           setConversations(prev => {
-            if (!prev.find(conv => conv.id === chat.id)) {
-              const currentUser = JSON.parse(localStorage.getItem('user'));
-              const isCurrentUserSeller = chat.seller === currentUser.id;
-              
-              // Format the chat data
-              const formattedChat = {
+            if (!prev.some(c => c.id === chat.id)) {
+              return [...prev, {
                 id: chat.id,
                 user: {
-                  name: isCurrentUserSeller
-                    ? chat.buyer_details?.name || chat.buyer_details?.username || 'Buyer'
-                    : chat.seller_details?.name || chat.seller_details?.username || 'Seller',
-                  avatar: isCurrentUserSeller
-                    ? chat.buyer_details?.profile_picture
-                    : chat.seller_details?.profile_picture,
+                  name: chat.seller_details?.name || chat.seller_details?.username || 'Seller',
+                  avatar: chat.seller_details?.profile_picture,
                   lastMessage: '',
                   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 },
@@ -323,19 +292,12 @@ const Messages = () => {
                   seller: chat.seller_details?.name || chat.seller_details?.username || 'Seller'
                 },
                 messages: []
-              };
-              return [...prev, formattedChat];
+              }];
             }
             return prev;
           });
-
-          // Select the new conversation
-          setSelectedConversation(chat.id);
-          loadMessages(chat.id);
-          connectWebSocket(chat.id);
         } catch (error) {
-          console.error('Error creating initial chat:', error);
-          initialChatCreatedRef.current = false;
+          console.error('Error creating chat:', error);
         }
       }
     };
@@ -348,23 +310,12 @@ const Messages = () => {
     const loadExistingChats = async () => {
       try {
         console.log('Loading existing chats...');
-        // Fetch existing chats
-        const response = await fetch(`${API_URL}/api/chats/`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json',
-          }
-        });
+        const response = await API.get('chats/');
         
-        if (!response.ok) {
-          throw new Error('Failed to load chats');
-        }
-
-        const existingChats = await response.json();
+        const existingChats = response.data;
         console.log('Received chats:', existingChats);
         const currentUser = JSON.parse(localStorage.getItem('user'));
 
-        // Format the chats with all necessary details
         const formattedChats = existingChats.map(chat => {
           const isCurrentUserSeller = chat.seller === currentUser.id;
           
@@ -395,20 +346,13 @@ const Messages = () => {
 
         console.log('Formatted chats:', formattedChats);
         setConversations(formattedChats);
-
-        // If there's a selected conversation, load its messages
-        if (selectedConversation) {
-          loadMessages(selectedConversation);
-        }
       } catch (error) {
-        console.error('Error loading existing chats:', error);
+        console.error('Error loading chats:', error);
       }
     };
 
-    if (currentUser) {
-      loadExistingChats();
-    }
-  }, [currentUser]); // Only reload when currentUser changes
+    loadExistingChats();
+  }, []);
 
   // Auto-scroll to bottom when new message is added
   useEffect(() => {

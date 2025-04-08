@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { listingsService } from '../services/listingsService';
+import API from '../axios';
 import ShareModal from '../components/ShareModal';
 import BookCard from '../components/BookCard';
 
@@ -70,11 +70,12 @@ const ListingDetail = () => {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const data = await listingsService.getListing(id);
-        setListing(data);
+        const response = await API.get(`listings/${id}/`);
+        setListing(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch listing details');
+        console.error('Error fetching listing:', err);
+        setError(err.response?.data?.detail || 'Failed to load listing');
         setLoading(false);
       }
     };
@@ -85,77 +86,24 @@ const ListingDetail = () => {
   // Fetch related listings
   useEffect(() => {
     const fetchRelatedListings = async () => {
+      if (!listing?.category) return;
+      
       try {
-        const data = await listingsService.getAllListings();
-        
-        // Calculate price range (20% above and below current price)
-        const priceRange = {
-          min: listing.price * 0.8,
-          max: listing.price * 1.2
-        };
-
-        // Get keywords from current listing's title and description
-        const currentKeywords = [
-          ...listing.title.toLowerCase().split(' '),
-          ...listing.description.toLowerCase().split(' ')
-        ].filter(word => word.length > 3); // Filter out short words
-
-        // Filter and sort related listings
-        const related = data
-          .filter(item => {
-            // Exclude current listing
-            if (item.id === Number(id)) return false;
-            
-            // Must be same category
-            if (item.category !== listing.category) return false;
-            
-            // Get keywords from current listing's title and description
-            const currentKeywords = [
-              ...listing.title.toLowerCase().split(' '),
-              ...listing.description.toLowerCase().split(' ')
-            ].filter(word => word.length > 3); // Filter out short words
-            
-            const itemKeywords = [
-              ...item.title.toLowerCase().split(' '),
-              ...item.description.toLowerCase().split(' ')
-            ].filter(word => word.length > 3);
-            
-            const keywordMatches = currentKeywords.filter(keyword => 
-              itemKeywords.some(itemKeyword => itemKeyword.includes(keyword))
-            ).length;
-            
-            // Require at least 1 keyword match
-            return keywordMatches >= 1;
-          })
-          .sort((a, b) => {
-            // Sort by keyword matches
-            const aKeywords = [...a.title.toLowerCase().split(' '), ...a.description.toLowerCase().split(' ')].filter(word => word.length > 3);
-            const bKeywords = [...b.title.toLowerCase().split(' '), ...b.description.toLowerCase().split(' ')].filter(word => word.length > 3);
-            
-            const aMatches = currentKeywords.filter(keyword => 
-              aKeywords.some(itemKeyword => itemKeyword.includes(keyword))
-            ).length;
-            
-            const bMatches = currentKeywords.filter(keyword => 
-              bKeywords.some(itemKeyword => itemKeyword.includes(keyword))
-            ).length;
-            
-            return bMatches - aMatches;
-          })
-          .slice(0, 10); // Limit to 10 related listings
-
-        setRelatedListings(related);
-        setRelatedLoading(false);
+        const response = await API.get(`listings/`, {
+          params: {
+            category: listing.category,
+            limit: 4,
+            exclude: id
+          }
+        });
+        setRelatedListings(response.data.results);
       } catch (err) {
-        console.error('Failed to fetch related listings:', err);
-        setRelatedLoading(false);
+        console.error('Error fetching related listings:', err);
       }
     };
 
-    if (listing) {
-      fetchRelatedListings();
-    }
-  }, [listing, id]);
+    fetchRelatedListings();
+  }, [listing?.category, id]);
 
   if (loading) {
     return (

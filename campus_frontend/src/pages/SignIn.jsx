@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../axios";
 import ShowHideButton from "../components/ShowHideButton";
-import { API_URL } from "../config";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -13,7 +12,7 @@ const SignIn = () => {
 
   const handleVerifyEmail = async () => {
     try {
-      const response = await axios.post(`${API_URL}/appuser/verify-email-by-address/`, {
+      const response = await API.post("appuser/verify-email-by-address/", {
         email: email
       });
       alert("Email verified successfully! You can now sign in.");
@@ -27,34 +26,34 @@ const SignIn = () => {
     e.preventDefault();
 
     try {
-        const response = await axios.post(`${API_URL}/appuser/sign-in/`, {
-            email,
-            password,
-        });
+      const response = await API.post("appuser/sign-in/", {
+        email,
+        password,
+      });
 
-        if (response.status === 200) {
-            console.log("✅ Sign-in response:", response.data);
+      if (response.status === 200) {
+        console.log("✅ Sign-in response:", response.data);
 
-            if (!response.data.access_token) {
-                console.error("❌ No access token in response!");
-                return;
-            }
-
-            localStorage.setItem("access_token", response.data.access_token);
-            localStorage.setItem("refresh_token", response.data.refresh_token);
-            localStorage.setItem("user", JSON.stringify(response.data.user));
-
-            window.dispatchEvent(new Event("authChange"));
-
-            navigate("/welcome");
+        if (!response.data.access_token) {
+          console.error("❌ No access token in response!");
+          return;
         }
-    } catch (err) {
-        console.error("❌ Sign-in error:", err);
-        setError(err.response?.data?.error || "Invalid email or password. Please try again.");
-    }
-};
 
-//styling
+        localStorage.setItem("access_token", response.data.access_token);
+        localStorage.setItem("refresh_token", response.data.refresh_token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        window.dispatchEvent(new Event("authChange"));
+
+        navigate("/welcome");
+      }
+    } catch (err) {
+      console.error("❌ Sign-in error:", err);
+      setError(err.response?.data?.error || "Invalid email or password. Please try again.");
+    }
+  };
+
+  //styling
   return (
     <div className="flex justify-center min-h-screen w-screen bg-white text-black">
       {/* Right side - Sign In Form */}

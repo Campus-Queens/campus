@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listingsService } from '../services/listingsService';
+import API from '../axios';
 import { Button } from "../components/ui/button";
 import { CategorySelect } from "../components/CategorySelect";
 import { ConditionSelect } from "../components/ConditionSelect";
@@ -96,23 +97,23 @@ const PostListing = () => {
             return;
         }
 
-        let endpoint = "/api/listings/";
+        let endpoint = "listings/";
         switch (formData.category) {
             case "BOOKS":
-                endpoint = "/api/listings/books/";
+                endpoint = "listings/books/";
                 break;
             case "SUBLETS":
-                endpoint = "/api/listings/sublets/";
+                endpoint = "listings/sublets/";
                 break;
             case "ROOMMATES":
-                endpoint = "/api/listings/roommates/";
+                endpoint = "listings/roommates/";
                 break;
             case "RIDESHARE":
-                endpoint = "/api/listings/rideshare/";
+                endpoint = "listings/rideshare/";
                 break;
             case "EVENTS":
             case "OTHER":
-                endpoint = "/api/listings/events/";
+                endpoint = "listings/events/";
                 break;
             default:
                 break;
@@ -122,85 +123,28 @@ const PostListing = () => {
         if (!formData.price || isNaN(formData.price)) {
           formData.price = "0";  // Default to 0 for categories without a price
         }
-         if (formData.category === "SUBLETS") {
-        formData.rooms = formData.num_roommates;  // Map frontend field to backend
-        delete formData.num_roommates;  // Remove old key to avoid conflicts
-    }
-      
-      // Ensure gender is in the correct format
-        const genderMap = {
-          "Male": "male",
-          "Female": "female",
-          "Non-binary": "non_binary",
-          "Other": "other",
-          "Prefer not to say": "prefer_not_to_say"
-          };
-          if (formData.gender && genderMap[formData.gender]) {
-              formData.gender = genderMap[formData.gender];
-          } else {
-              formData.gender = "other";  // Default fallback
-          }
-
-        // Fix condition field
-        const formatCondition = (condition) => {
-          if (!condition || typeof condition !== "string") return ""; // Don't override user input
-          return condition.charAt(0).toUpperCase() + condition.slice(1).toLowerCase();
-      };
-
-        // Ensure year_of_study is valid
-        if (!formData.year_of_study) {
-            formData.year_of_study = "First Year";
+        if (formData.category === "SUBLETS") {
+          formData.rooms = formData.num_roommates;  // Map frontend field to backend
+          delete formData.num_roommates;  // Remove old key to avoid conflicts
         }
-        if (formData.condition) {
-          formData.condition = formatCondition(formData.condition);
-      }
 
-        // Create FormData for multipart submission
         const submitData = new FormData();
-
-        // Ensure category is included first
-        submitData.append('category', formData.category);
-
-        // Add all other form fields
-        Object.keys(formData).forEach(key => {
-          if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
-            if (key === 'condition') {
-              submitData.append(key, formatCondition(formData[key]));
-            } else if (key === 'image' && formData[key] instanceof File) {
-              submitData.append(key, formData[key]);
-            } else {
-              submitData.append(key, formData[key]);
-            }
+        Object.entries(formData).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            submitData.append(key, value);
           }
         });
 
-        // Debugging Output
-        console.log("📡 Submitting Form Data:", {
-          ...formData,
-          category: formData.category // Explicitly log category
-        });
-        console.log("📡 FormData Entries:", Object.fromEntries(submitData));
-
-        const token = localStorage.getItem('access_token');
-
-        const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
-          method: "POST",
-          body: submitData,
+        const response = await API.post(endpoint, submitData, {
           headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-       });
-
-        if (!response.ok) {
-            const errorData = await response.json(); // Get error details
-            console.error("🚨 Server Validation Error:", errorData);
-            throw new Error(errorData.detail || "Failed to create listing");
-        }
+            'Content-Type': 'multipart/form-data'
+          }
+        });
 
         navigate("/");
     } catch (err) {
         console.error("❌ Error creating listing:", err);
-        setError(err.message || "Failed to create listing");
+        setError(err.response?.data?.detail || err.message || "Failed to create listing");
     } finally {
         setLoading(false);
     }

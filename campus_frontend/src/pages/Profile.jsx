@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import API from "../axios";
 import EditProfileModal from "../components/EditProfileModal";
 
 const Profile = () => {
@@ -59,13 +59,10 @@ const Profile = () => {
           twitter: user.twitter || "",
         });
 
-        // Get saved listing IDs from localStorage
         const savedListingIds = JSON.parse(localStorage.getItem('savedListings') || '[]');
         
         if (savedListingIds.length > 0) {
-          // Fetch all listings
-          const response = await axios.get('http://localhost:8000/api/listings/');
-          // Filter only the saved ones
+          const response = await API.get('listings/');
           const savedListingsData = response.data.filter(listing => savedListingIds.includes(listing.id));
           setSavedListings(savedListingsData);
         }
@@ -125,10 +122,8 @@ const Profile = () => {
         data.append("profile_picture", profileImageFile); 
       }
       
-  
-      const response = await axios.put(`http://localhost:8000/appuser/edit-profile/`, data, {
+      const response = await API.put("appuser/edit-profile/", data, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'multipart/form-data'
         }
       });
