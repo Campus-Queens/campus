@@ -1,11 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Listing, BookListing, SubletListing, Roommates, RideShare, EventsAndOther, Message
 
-User = get_user_model()
+User = get_user_model() 
 
 class UserSerializer(serializers.ModelSerializer):
-
     profile_picture = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = User
@@ -43,4 +41,4 @@ class UserCreateSerializer(UserSerializer):
     password = serializers.CharField(write_only=True)
     
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ['password']
+        fields = UserSerializer.Meta.fields + ['password'] 
