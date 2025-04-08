@@ -97,42 +97,59 @@ const PostListing = () => {
             return;
         }
 
-        let endpoint = "listings/";
+        let endpoint = "api/listings/";
         switch (formData.category) {
             case "BOOKS":
-                endpoint = "listings/books/";
+                endpoint = "api/listings/books/";
                 break;
             case "SUBLETS":
-                endpoint = "listings/sublets/";
+                endpoint = "api/listings/sublets/";
                 break;
             case "ROOMMATES":
-                endpoint = "listings/roommates/";
+                endpoint = "api/listings/roommates/";
                 break;
             case "RIDESHARE":
-                endpoint = "listings/rideshare/";
+                endpoint = "api/listings/rideshare/";
                 break;
             case "EVENTS":
             case "OTHER":
-                endpoint = "listings/events/";
+                endpoint = "api/listings/events/";
                 break;
             default:
                 break;
         }
 
-        // Fix gender before submitting
-        if (!formData.price || isNaN(formData.price)) {
-          formData.price = "0";  // Default to 0 for categories without a price
+        // Clean up the form data
+        const cleanFormData = { ...formData };
+        
+        // Fix price
+        if (!cleanFormData.price || isNaN(cleanFormData.price)) {
+            cleanFormData.price = "0";  // Default to 0 for categories without a price
         }
-        if (formData.category === "SUBLETS") {
-          formData.rooms = formData.num_roommates;  // Map frontend field to backend
-          delete formData.num_roommates;  // Remove old key to avoid conflicts
+        
+        // Map fields for specific categories
+        if (cleanFormData.category === "SUBLETS") {
+            cleanFormData.rooms = cleanFormData.num_roommates;
+            delete cleanFormData.num_roommates;
         }
 
+        // Remove null/undefined/empty values
+        Object.keys(cleanFormData).forEach(key => {
+            if (cleanFormData[key] === null || cleanFormData[key] === undefined || cleanFormData[key] === '') {
+                delete cleanFormData[key];
+            }
+        });
+
         const submitData = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
-            submitData.append(key, value);
-          }
+        Object.entries(cleanFormData).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') {
+                submitData.append(key, value);
+            }
+        });
+
+        console.log('Submitting data:', {
+            endpoint,
+            formData: Object.fromEntries(submitData.entries())
         });
 
         const response = await API.post(endpoint, submitData, {
