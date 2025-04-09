@@ -87,7 +87,7 @@ const PostListing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(JSON.stringify(err.response?.data || err.message || "Unknown error", null, 2));
+    setError(null);
 
     try {
         const userData = localStorage.getItem('user');
@@ -161,7 +161,7 @@ const PostListing = () => {
         navigate("/");
     } catch (err) {
         console.error("❌ Error creating listing:", err);
-        setError(err.response?.data?.detail || err.message || "Failed to create listing");
+        setError(JSON.stringify(err.response?.data || err.message || "Failed", null, 2));
     } finally {
         setLoading(false);
     }
