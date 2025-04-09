@@ -16,9 +16,9 @@ export function ConditionSelect({ value, onValueChange }) {
       </SelectTrigger>
       <SelectContent className="!bg-white !text-gray-900">
         <SelectGroup>
-          <SelectItem value="GOOD" className="!bg-white hover:!bg-gray-50">Good</SelectItem>
-          <SelectItem value="FAIR" className="!bg-white hover:!bg-gray-50">Fair</SelectItem>
-          <SelectItem value="POOR" className="!bg-white hover:!bg-gray-50">Poor</SelectItem>
+          <SelectItem value="Good" className="!bg-white hover:!bg-gray-50">Good</SelectItem>
+          <SelectItem value="Fair" className="!bg-white hover:!bg-gray-50">Fair</SelectItem>
+          <SelectItem value="Poor" className="!bg-white hover:!bg-gray-50">Poor</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
