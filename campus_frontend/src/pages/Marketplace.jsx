@@ -4,6 +4,8 @@ import BookCard from "../components/BookCard";
 import { listingsService } from '../services/listingsService';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
+import { API_URL } from '../config';
+
 
 const Marketplace = () => {
   const [listings, setListings] = useState([]);
