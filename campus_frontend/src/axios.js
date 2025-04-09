@@ -26,11 +26,6 @@ API.interceptors.request.use(
         // Clean up any double slashes in the URL
         config.url = config.url.replace(/\/+/g, '/');
         
-        // Add /api prefix for listings and chats endpoints, but not for appuser
-        if (!config.url.startsWith('appuser/') && (config.url.includes('listings/') || config.url.includes('chats/'))) {
-            config.url = 'api/' + config.url;
-        }
-        
         // Remove any leading slash to prevent double slashes
         config.url = config.url.replace(/^\/+/, '');
         
