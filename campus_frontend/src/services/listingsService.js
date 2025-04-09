@@ -3,7 +3,7 @@ import API from '../axios';
 export const listingsService = {
   getAllListings: async () => {
     try {
-      const response = await API.get('api/listings/');
+      const response = await API.get('listings/');
       return response.data;
     } catch (error) {
       console.error('Error fetching listings:', error);
@@ -13,7 +13,7 @@ export const listingsService = {
 
   getListing: async (id) => {
     try {
-      const response = await API.get(`api/listings/${id}/`);
+      const response = await API.get(`listings/${id}/`);
       return response.data;
     } catch (error) {
       console.error('Error fetching listing:', error);
@@ -23,7 +23,7 @@ export const listingsService = {
 
   createListing: async (listingData, category) => {
     try {
-      let endpoint = 'api/listings/';
+      let endpoint = 'listings/';
       switch (category) {
         case "BOOKS":
           endpoint += "books/";
@@ -60,7 +60,7 @@ export const listingsService = {
 
   updateListing: async (id, listingData) => {
     try {
-      const response = await API.put(`api/listings/${id}/`, listingData);
+      const response = await API.put(`listings/${id}/`, listingData);
       return response.data;
     } catch (error) {
       console.error('Error updating listing:', error);
@@ -70,7 +70,7 @@ export const listingsService = {
   
   deleteListing: async (id) => {
     try {
-      await API.delete(`api/listings/${id}/`);
+      await API.delete(`listings/${id}/`);
     } catch (error) {
       console.error('Error deleting listing:', error);
       throw error;
