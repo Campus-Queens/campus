@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Listing, BookListing, SubletListing, Roommates, RideShare, EventsAndOther
 
-User = get_user_model()  # Dynamically get your AppUser model
+User = get_user_model() 
 
 class SellerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,10 +11,17 @@ class SellerSerializer(serializers.ModelSerializer):
 
 class ListingSerializer(serializers.ModelSerializer):
     seller = SellerSerializer(read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
         fields = '__all__'
+    
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image and hasattr(obj.image, 'url'):
+            return request.build_absolute_uri(obj.image.url)
+        return None
 
     def get_seller_name(self, obj):
         if obj.seller:

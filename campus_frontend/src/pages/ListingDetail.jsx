@@ -421,10 +421,15 @@ const ListingDetail = () => {
                 {relatedListings.map((relatedListing) => (
                   <div key={relatedListing.id} className="w-[280px] flex-shrink-0">
                     <BookCard 
-                      {...relatedListing} 
-                      seller_name={relatedListing.seller_name}
-                      seller_id={relatedListing.seller}
-                    />
+                    {...relatedListing}
+                    image={
+                      relatedListing.image?.startsWith('http')
+                        ? relatedListing.image
+                        : `${API_URL.replace('/api', '')}/media/${relatedListing.image?.split('/media/')[1]}`
+                    }
+                    seller_name={relatedListing.seller?.name || relatedListing.seller_name}
+                    seller_id={relatedListing.seller?.id || relatedListing.seller}
+                  />
                   </div>
                 ))}
               </div>

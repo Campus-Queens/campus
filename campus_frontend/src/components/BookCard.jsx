@@ -41,7 +41,7 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
 
   // Handle image URL
   const placeholderImage = "/placeholder.png";
-  const imageUrl = image ? `${API_URL.replace('/api', '')}/media/${image.split('/media/')[1]}` : placeholderImage;
+  const imageUrl = image || placeholderImage;
 
   const handleClick = () => {
     // Scroll to top before navigating

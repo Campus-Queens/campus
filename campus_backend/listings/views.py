@@ -19,13 +19,22 @@ class ListingListCreateView(generics.ListCreateAPIView):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']  
     ordering_fields = ['price', 'created_at']
+    
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 # ✅ Retrieve, Update, and Delete a listing
 class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    
 
 # ✅ Book Listings
 class BookListingListCreateView(generics.ListCreateAPIView):
@@ -35,9 +44,15 @@ class BookListingListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class BookListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BookListing.objects.all()
     serializer_class = BookListingSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 # ✅ Sublet Listings
@@ -48,9 +63,15 @@ class SubletListingListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class SubletListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubletListing.objects.all()
     serializer_class = SubletListingSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 # ✅ Roommates Listings
@@ -61,9 +82,14 @@ class RoommatesListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
 class RoommatesDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Roommates.objects.all()
     serializer_class = RoommatesSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 # ✅ Rideshare Listings
@@ -73,17 +99,24 @@ class RideShareListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
+    
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 class RideShareDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = RideShare.objects.all()
     serializer_class = RideShareSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class EventsAndOtherListCreateView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         print("\n🔹 Received Data:", request.data)
 
-        serializer = EventsAndOtherSerializer(data=request.data)
+        serializer = EventsAndOtherSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             print("✅ Data is valid, saving to database...\n")
             serializer.save(seller=request.user)  # ✅ Explicitly set seller
@@ -91,7 +124,15 @@ class EventsAndOtherListCreateView(APIView):
         else:
             print("❌ Validation Errors:", serializer.errors, "\n")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 class EventsAndOtherDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = EventsAndOther.objects.all()
     serializer_class = EventsAndOtherSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    
