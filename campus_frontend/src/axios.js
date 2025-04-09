@@ -40,9 +40,20 @@ API.interceptors.request.use(
         });
 
         const token = localStorage.getItem('access_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+
+        // Define routes that don't need auth
+        const publicEndpoints = [
+        'appuser/create-user',
+        'appuser/sign-in',
+        'appuser/verify-email',
+        'appuser/request-password-reset',
+        'appuser/reset-password'
+        ];
+        const isPublic = publicEndpoints.some(endpoint => config.url.includes(endpoint));
+
+if (token && !isPublic) {
+    config.headers.Authorization = `Bearer ${token}`;
+}
         return config;
     },
     (error) => {
