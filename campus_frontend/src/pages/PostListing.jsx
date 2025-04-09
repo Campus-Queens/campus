@@ -27,7 +27,7 @@ const PostListing = () => {
     title: '',
     author: '',
     edition: '',
-    condition: 'GOOD',
+    condition: 'Good',
     price: '',
     course_code: '',
     description: '',
