@@ -15,7 +15,7 @@ const getApiConfig = () => {
       WS_URL: 'ws://localhost:8000'
     },
     production: {
-      API_URL: 'https://campus-backend-if2p.onrender.com',
+      API_URL: 'https://campus-backend-if2p.onrender.com/api',
       WS_URL: 'wss://campus-backend-if2p.onrender.com'
     },
     test: {
