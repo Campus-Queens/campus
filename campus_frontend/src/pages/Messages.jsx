@@ -37,7 +37,7 @@ const Messages = () => {
   const loadMessages = async (chatId) => {
     try {
       setIsLoadingMessages(true);
-      const response = await API.get(`api/chats/${chatId}/messages/`);
+      const response = await API.get(`chats/${chatId}/messages/`);
 
       const currentUser = JSON.parse(localStorage.getItem('user'));
 
@@ -265,7 +265,7 @@ const Messages = () => {
       if (listingId && sellerId && !initialChatCreatedRef.current) {
         try {
           initialChatCreatedRef.current = true;
-          const response = await API.post('api/chats/', {
+          const response = await API.post('chats/', {
             listing: listingId
           });
 
@@ -310,7 +310,7 @@ const Messages = () => {
     const loadExistingChats = async () => {
       try {
         console.log('Loading existing chats...');
-        const response = await API.get('api/chats/');
+        const response = await API.get('chats/');
         
         const existingChats = response.data;
         console.log('Received chats:', existingChats);
