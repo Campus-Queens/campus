@@ -97,23 +97,23 @@ const PostListing = () => {
             return;
         }
 
-        let endpoint = "listings/";
+        let endpoint = "api/listings/";
         switch (formData.category) {
             case "BOOKS":
-                endpoint = "listings/books/";
+                endpoint = "api/listings/books/";
                 break;
             case "SUBLETS":
-                endpoint = "listings/sublets/";
+                endpoint = "api/listings/sublets/";
                 break;
             case "ROOMMATES":
-                endpoint = "listings/roommates/";
+                endpoint = "api/listings/roommates/";
                 break;
             case "RIDESHARE":
-                endpoint = "listings/rideshare/";
+                endpoint = "api/listings/rideshare/";
                 break;
             case "EVENTS":
             case "OTHER":
-                endpoint = "listings/events/";
+                endpoint = "api/listings/events/";
                 break;
             default:
                 break;
