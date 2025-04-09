@@ -40,13 +40,23 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
   };
 
   // Handle image URL
-  const placeholderImage = "/placeholder.png";
-  const imageUrl = image?.startsWith('http')
+  // Handle image URL logic
+const placeholderImage = "/placeholder.png";
+const imageUrl = image?.startsWith('http')
   ? image
   : image
     ? `${API_URL.replace('/api', '')}/${image.replace(/^\/?media\/?/, 'media/')}`
     : placeholderImage;
 
+// DEBUGGING: Log image-related info
+useEffect(() => {
+  console.log("🖼️ Debug BookCard Image", {
+    listingId: id,
+    rawImageField: image,
+    imageUrl, // what you're actually passing to <img src=...>
+    isUsingPlaceholder: !image
+  });
+}, [id, image, imageUrl]);
 
   const handleClick = () => {
     // Scroll to top before navigating
