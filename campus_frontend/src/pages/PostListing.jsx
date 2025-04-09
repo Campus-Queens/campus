@@ -87,7 +87,7 @@ const PostListing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError(JSON.stringify(err.response?.data || err.message || "Unknown error", null, 2));
 
     try {
         const userData = localStorage.getItem('user');
