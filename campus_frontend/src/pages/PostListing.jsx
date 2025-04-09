@@ -100,20 +100,20 @@ const PostListing = () => {
         let endpoint = "api/listings/";
         switch (formData.category) {
             case "BOOKS":
-                endpoint = "api/listings/books/";
+                endpoint = "listings/books/";
                 break;
             case "SUBLETS":
-                endpoint = "api/listings/sublets/";
+                endpoint = "listings/sublets/";
                 break;
             case "ROOMMATES":
-                endpoint = "api/listings/roommates/";
+                endpoint = "listings/roommates/";
                 break;
             case "RIDESHARE":
-                endpoint = "api/listings/rideshare/";
+                endpoint = "listings/rideshare/";
                 break;
             case "EVENTS":
             case "OTHER":
-                endpoint = "api/listings/events/";
+                endpoint = "listings/events/";
                 break;
             default:
                 break;
