@@ -33,6 +33,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 ALLOWED_HOSTS = [
     "campus-backend-if2p.onrender.com",
+    "campus-frontend-minn.onrender.com",
     "localhost",
     "127.0.0.1"
 ]
