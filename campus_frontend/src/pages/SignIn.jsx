@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../axios";
 import ShowHideButton from "../components/ShowHideButton";
 
@@ -110,7 +110,7 @@ const SignIn = () => {
           </form>
     
           <p className="text-center text-gray-600 mt-4 text-xs">
-            New to Campus? <a href="/register" className="text-blue-500">Create an account</a>
+            New to Campus? <Link to="/register" className="text-blue-500">Create an account</Link>
           </p>
     
           {error && <p className="text-red-500 text-xs text-center mt-2">{error}</p>}
