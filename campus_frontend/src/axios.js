@@ -43,12 +43,19 @@ API.interceptors.request.use(
 
         // Define routes that don't need auth
         const publicEndpoints = [
-        'appuser/create-user',
-        'appuser/sign-in',
-        'appuser/verify-email',
-        'appuser/request-password-reset',
-        'appuser/reset-password'
-        ];
+            'appuser/create-user',
+            'appuser/sign-in',
+            'appuser/verify-email',
+            'appuser/request-password-reset',
+            'appuser/reset-password',
+            'listings',
+            'books',
+            'rideshare',
+            'sublets',
+            'roommates',
+            'events'
+          ];
+          
         const isPublic = publicEndpoints.some(endpoint => config.url.includes(endpoint));
 
 if (token && !isPublic) {
