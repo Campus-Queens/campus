@@ -39,31 +39,42 @@ API.interceptors.request.use(
 
     const token = localStorage.getItem('access_token');
 
-    // Define public GET endpoints
+    const alwaysPublicEndpoints = [
+        'appuser/create-user',
+        'appuser/sign-in',
+        'appuser/verify-email',
+        'appuser/request-password-reset',
+        'appuser/reset-password'
+      ];
+      
     const publicGetEndpoints = [
-      'listings',
-      'books',
-      'rideshare',
-      'sublets',
-      'roommates',
-      'events',
-      'appuser/create-user',
-      'appuser/sign-in',
-      'appuser/verify-email',
-      'appuser/request-password-reset',
-      'appuser/reset-password'
-    ];
+        'listings',
+        'books',
+        'rideshare',
+        'sublets',
+        'roommates',
+        'events'
+      ];
 
+    const cleanedUrl = config.url.replace(/^\/+/, '');
+    
+    const isAlwaysPublic = alwaysPublicEndpoints.some(endpoint =>
+    cleanedUrl.startsWith(endpoint)
+    );
+    
     const isPublicGet = method === 'get' &&
-      publicGetEndpoints.some(endpoint => config.url.includes(endpoint));
+    publicGetEndpoints.some(endpoint =>
+        cleanedUrl.startsWith(endpoint)
+    );
+      
 
-    if (token && !isPublicGet) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Auth header set');
-    } else {
-      delete config.headers.Authorization;
-      console.log('🟢 No auth header (public request)');
-    }
+    if (token && !isAlwaysPublic && !isPublicGet) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('🔐 Auth header set');
+      } else {
+        delete config.headers.Authorization;
+        console.log('🟢 No auth header (public request)');
+      }
 
     return config;
   },
