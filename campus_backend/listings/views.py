@@ -6,6 +6,7 @@ from .serializers import ListingSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import generics, filters
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Listing, BookListing, SubletListing, Roommates, RideShare, EventsAndOther
 from .serializers import (
     ListingSerializer, BookListingSerializer, SubletListingSerializer, 
@@ -19,6 +20,12 @@ class ListingListCreateView(generics.ListCreateAPIView):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']  
     ordering_fields = ['price', 'created_at']
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
     
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
