@@ -15,6 +15,7 @@ const Messages = () => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
   
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -259,11 +260,12 @@ const Messages = () => {
     }
   }, [currentUser]);
 
-  // Add effect to handle initial chat creation when coming from a listing
+  // Effect to create initial chat when coming from a listing
   useEffect(() => {
     const createInitialChat = async () => {
       if (listingId && sellerId && !initialChatCreatedRef.current) {
         try {
+          setIsCreatingChat(true);
           initialChatCreatedRef.current = true;
           const response = await API.post('chats/', {
             listing: listingId
@@ -297,7 +299,10 @@ const Messages = () => {
             return prev;
           });
         } catch (error) {
-          console.error('Error creating chat:', error);
+          console.error('Error creating initial chat:', error);
+          initialChatCreatedRef.current = false;
+        } finally {
+          setIsCreatingChat(false);
         }
       }
     };
@@ -305,9 +310,12 @@ const Messages = () => {
     createInitialChat();
   }, [listingId, sellerId]);
 
-  // Add effect to load existing chats
+  // Effect to load existing chats
   useEffect(() => {
     const loadExistingChats = async () => {
+      // Don't load existing chats if we're in the process of creating a new one
+      if (isCreatingChat) return;
+
       try {
         console.log('Loading existing chats...');
         const response = await API.get('chats/');

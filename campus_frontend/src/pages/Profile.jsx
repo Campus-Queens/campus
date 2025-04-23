@@ -14,6 +14,7 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [savedListings, setSavedListings] = useState([]);
+  const [userListings, setUserListings] = useState([]);
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const [formData, setFormData] = useState({
@@ -62,11 +63,19 @@ const Profile = () => {
 
         const savedListingIds = JSON.parse(localStorage.getItem('savedListings') || '[]');
         
+        // Fetch all listings
+        const response = await axios.get('http://localhost:8000/api/listings/');
+        
+        // Filter saved listings
         if (savedListingIds.length > 0) {
-          const response = await API.get('listings/');
           const savedListingsData = response.data.filter(listing => savedListingIds.includes(listing.id));
           setSavedListings(savedListingsData);
         }
+
+        // Filter user's listings
+        const userListingsData = response.data.filter(listing => listing.seller?.id === user.id);
+        setUserListings(userListingsData);
+
       } catch (err) {
         console.error("Error fetching data:", err);
         if (!err.response || err.response.status === 401) {
@@ -302,7 +311,32 @@ const Profile = () => {
               </div>
             ) : activeTab === 'listings' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Listings will be mapped here */}
+                {userListings.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    You haven't posted any listings yet
+                  </div>
+                ) : (
+                  userListings.map((listing) => (
+                    <div 
+                      key={listing.id} 
+                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                      onClick={() => navigate(`/listing/${listing.id}`)}
+                    >
+                      <img 
+                        src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
+                        alt={listing.title} 
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
+                        <div className="flex items-center justify-between">
+                          <p className="text-gray-900 font-medium">${listing.price}</p>
+                          <p className="text-gray-500 text-sm">{new Date(listing.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

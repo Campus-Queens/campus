@@ -1,8 +1,814 @@
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useForm } from "react-hook-form";
+
 const Board = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [activeTab, setActiveTab] = useState('main'); // main, myBoard, post, opportunities, directory
+  const [expandedSections, setExpandedSections] = useState({
+    postType: false,
+    category: false,
+    dateRange: false,
+    compensation: false,
+    yearLevel: false,
+    postedBy: false,
+    location: false
+  });
+
+  const form = useForm({
+    defaultValues: {
+      postType: [],
+      category: [],
+      dateRange: 'all',
+      compensation: [],
+      yearLevel: [],
+      postedBy: [],
+      followedClubs: false,
+      location: []
+    },
+  });
+
+  // Dummy data for demonstration
+  const posts = [
+    {
+      id: 1,
+      type: 'hiring',
+      title: "Marketing Lead for Queen's eCommerce Club",
+      organization: "Queen's eCommerce Club",
+      logo: "/path-to-logo.png",
+      description: "Looking for a creative and driven marketing lead to join our executive team.",
+      tags: ['Marketing', 'Paid', 'Leadership', 'FirstYearsWelcome'],
+      postedAt: '2 days ago',
+      deadline: '2024-04-01',
+      isPaid: true,
+      yearLevel: ['All Years'],
+      category: 'Business'
+    },
+    {
+      id: 2,
+      type: 'event',
+      title: "Tech Workshop: Intro to React",
+      organization: "QWEB",
+      logo: "/path-to-logo.png",
+      description: "Learn the basics of React in this hands-on workshop.",
+      tags: ['Tech', 'Workshop', 'Development', 'Beginner'],
+      date: '2024-03-20',
+      time: '5:30 PM',
+      location: 'Walter Light Hall 205',
+      category: 'Engineering'
+    }
+  ];
+
+  const filterOptions = {
+    postType: [
+      { id: 'hiring', label: 'Hiring' },
+      { id: 'event', label: 'Event' },
+      { id: 'volunteer', label: 'Volunteer' },
+      { id: 'competition', label: 'Competition' },
+      { id: 'hackathon', label: 'Hackathon' }
+    ],
+    category: [
+      { id: 'business', label: 'Business' },
+      { id: 'engineering', label: 'Engineering' },
+      { id: 'health', label: 'Health' },
+      { id: 'arts', label: 'Arts' },
+      { id: 'stem', label: 'STEM' },
+      { id: 'nonprofit', label: 'Non-Profit' }
+    ],
+    dateRange: [
+      { id: 'week', label: 'This Week' },
+      { id: 'month', label: 'This Month' },
+      { id: 'all', label: 'All Time' }
+    ],
+    compensation: [
+      { id: 'paid', label: 'Paid' },
+      { id: 'volunteer', label: 'Volunteer' }
+    ],
+    yearLevel: [
+      { id: 'first', label: 'First Years' },
+      { id: 'all', label: 'All Years' },
+      { id: 'upper', label: 'Upper Years' }
+    ],
+    postedBy: [
+      { id: 'faculty', label: 'Faculty' },
+      { id: 'ams', label: 'AMS Clubs' },
+      { id: 'external', label: 'External Recruiters' }
+    ],
+    location: [
+      { id: 'campus', label: 'On Campus' },
+      { id: 'downtown', label: 'Downtown' },
+      { id: 'university_district', label: 'University District' },
+      { id: 'west_campus', label: 'West Campus' },
+      { id: 'north_campus', label: 'North Campus' },
+      { id: 'south_campus', label: 'South Campus' }
+    ]
+  };
+
+  const handleFilterChange = (category, value) => {
+    const currentValues = form.getValues(category);
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(item => item !== value)
+      : [...currentValues, value];
+    form.setValue(category, newValues);
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const renderTopNav = () => (
+    <div className="bg-white border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex space-x-8">
+            <div 
+              onClick={() => setActiveTab('main')}
+              className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                activeTab === 'main' 
+                  ? 'border-black text-gray-900' 
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              Main Feed
+            </div>
+            <div 
+              onClick={() => setActiveTab('nightlife')}
+              className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                activeTab === 'nightlife' 
+                  ? 'border-black text-gray-900' 
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              Nightlife
+            </div>
+
+
+
+
+            <div 
+              onClick={() => setActiveTab('myBoard')}
+              className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                activeTab === 'myBoard' 
+                  ? 'border-black text-gray-900' 
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              My Board
+            </div>
+            <div 
+              onClick={() => setActiveTab('opportunities')}
+              className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                activeTab === 'opportunities' 
+                  ? 'border-black text-gray-900' 
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              For You
+            </div>
+            <div 
+              onClick={() => setActiveTab('directory')}
+              className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                activeTab === 'directory' 
+                  ? 'border-black text-gray-900' 
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              Directory
+            </div>
+          </div>
+          <div className="flex items-center">
+            <div 
+              onClick={() => setActiveTab('post')}
+              className="ml-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer"
+            >
+              Post Opportunity
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPostCard = (post) => (
+    <div
+      key={post.id}
+      onClick={() => setSelectedPost(selectedPost?.id === post.id ? null : post)}
+      className="bg-white rounded-lg shadow mb-4 p-6 cursor-pointer hover:shadow-md transition-shadow mx-4"
+    >
+      <div className="flex items-start space-x-4">
+        <div className="h-12 w-12 rounded-full bg-gray-200 flex-shrink-0">
+          {/* Replace with actual logo */}
+          <div className="h-full w-full rounded-full flex items-center justify-center text-gray-500 text-lg font-medium">
+            {post.organization[0]}
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
+              <p className="text-gray-600">{post.organization}</p>
+              <div className="flex items-center mt-2 text-sm text-gray-500">
+                <span>{post.type === 'event' ? post.date : post.postedAt}</span>
+                {post.type === 'event' && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <span>{post.time}</span>
+                    <span className="mx-2">•</span>
+                    <span>{post.location}</span>
+                  </>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {post.tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                // Add apply/RSVP logic
+              }}
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
+            >
+              {post.type === 'event' ? 'RSVP' : 'Apply'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMainContent = () => {
+    switch (activeTab) {
+      case 'main':
+        return (
+          <div className="w-full px-4 py-4 relative">
+            {selectedPost && (
+              <div
+                onClick={() => setSelectedPost(null)}
+                className="fixed left-4 top-20 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                role="button"
+                aria-label="Go back"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </div>
+            )}
+            <div className="max-w-none">
+              {posts.map(post => renderPostCard(post))}
+            </div>
+          </div>
+        );
+      case 'myBoard':
+        return (
+          <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold mb-6">My Saved Items</h2>
+            {/* Add saved posts, followed clubs, etc. */}
+          </div>
+        );
+      case 'nightlife':
+        return (
+          <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold mb-6">Whats happening in town Tn?</h2>
+            {/* Add nightlife listings */}
+          </div>
+        );
+      case 'opportunities':
+        return (
+          <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold mb-6">Recommended For You</h2>
+            {/* Add personalized recommendations */}
+          </div>
+        );
+      case 'directory':
+        return (
+          <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold mb-6">Clubs & Employers</h2>
+            {/* Add directory listing */}
+          </div>
+        );
+      case 'post':
+        return (
+          <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold mb-6">Post an Opportunity</h2>
+            {/* Add posting form */}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-white">
-      <h1 className="text-6xl font-bold mb-4">The Board</h1>
-      <p className="text-2xl text-gray-600">04/01/25</p>
+    <div className="min-h-[calc(100vh-64px)]">
+      {renderTopNav()}
+      <div className="flex h-[calc(100vh-64px-4rem)]">
+        {/* Left Sidebar - Filters */}
+        <div className="w-72 border-r border-gray-200 p-4 bg-white hidden md:block overflow-y-auto">
+          <Form {...form}>
+            <form className="space-y-6">
+              {/* Search Keywords */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Search</h3>
+                <input
+                  type="text"
+                  placeholder="Keywords..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                />
+              </div>
+
+              {/* Post Type */}
+              <div>
+                <div
+                  onClick={() => toggleSection('postType')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Post Type</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.postType ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.postType ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="postType"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.postType.map((type) => (
+                            <FormItem
+                              key={type.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('postType').includes(type.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('postType', type.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {type.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <div
+                  onClick={() => toggleSection('category')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Category</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.category ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.category ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.category.map((cat) => (
+                            <FormItem
+                              key={cat.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('category').includes(cat.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('category', cat.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {cat.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <div
+                  onClick={() => toggleSection('dateRange')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Date Posted</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.dateRange ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.dateRange ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="dateRange"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.dateRange.map((range) => (
+                            <FormItem
+                              key={range.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('dateRange').includes(range.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('dateRange', range.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {range.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Compensation */}
+              <div>
+                <div
+                  onClick={() => toggleSection('compensation')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Compensation</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.compensation ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.compensation ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="compensation"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.compensation.map((comp) => (
+                            <FormItem
+                              key={comp.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('compensation').includes(comp.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('compensation', comp.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {comp.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Year Level */}
+              <div>
+                <div
+                  onClick={() => toggleSection('yearLevel')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Open To</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.yearLevel ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.yearLevel ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="yearLevel"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.yearLevel.map((year) => (
+                            <FormItem
+                              key={year.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('yearLevel').includes(year.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('yearLevel', year.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {year.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Posted By */}
+              <div>
+                <div
+                  onClick={() => toggleSection('postedBy')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Posted By</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.postedBy ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.postedBy ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="postedBy"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.postedBy.map((poster) => (
+                            <FormItem
+                              key={poster.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('postedBy').includes(poster.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('postedBy', poster.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {poster.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <div
+                  onClick={() => toggleSection('location')}
+                  className="flex items-center justify-between cursor-pointer group"
+                >
+                  <h3 className="text-sm font-medium text-gray-900">Location</h3>
+                  <svg
+                    className={`h-5 w-5 text-gray-400 group-hover:text-gray-500 transition-transform ${
+                      expandedSections.location ? 'transform rotate-180' : ''
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className={`space-y-2 mt-2 ${expandedSections.location ? '' : 'hidden'}`}>
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={() => (
+                      <FormItem>
+                        <div className="space-y-2">
+                          {filterOptions.location.map((loc) => (
+                            <FormItem
+                              key={loc.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={form.watch('location').includes(loc.id)}
+                                  onCheckedChange={(checked) => {
+                                    handleFilterChange('location', loc.id);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {loc.label}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Followed Clubs Toggle */}
+              <FormField
+                control={form.control}
+                name="followedClubs"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-normal">
+                      Only Show Followed Clubs
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              {/* Clear Filters */}
+              <div
+                onClick={() => form.reset()}
+                className="w-full px-4 py-2 mt-4 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer text-center"
+              >
+                Clear All Filters
+              </div>
+            </form>
+          </Form>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 bg-gray-50 overflow-y-auto">
+          {renderMainContent()}
+        </div>
+
+        {/* Right Sidebar - Post Details */}
+        <div
+          className={`fixed right-0 top-16 h-[calc(100vh-64px)] w-full md:w-[32rem] bg-white border-l border-gray-200 transform transition-transform duration-300 ease-in-out ${
+            selectedPost ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {selectedPost && (
+            <div className="h-full overflow-y-auto">
+              <div className="p-6">
+                <div
+                  onClick={() => setSelectedPost(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="h-16 w-16 rounded-full bg-gray-200 flex-shrink-0">
+                    <div className="h-full w-full rounded-full flex items-center justify-center text-gray-500 text-xl font-medium">
+                      {selectedPost.organization[0]}
+                    </div>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{selectedPost.title}</h1>
+                    <p className="text-lg text-gray-600">{selectedPost.organization}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {selectedPost.type === 'event' ? (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-2">Event Details</h2>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Date:</span> {selectedPost.date}</p>
+                        <p><span className="font-medium">Time:</span> {selectedPost.time}</p>
+                        <p><span className="font-medium">Location:</span> {selectedPost.location}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-2">Position Details</h2>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Type:</span> {selectedPost.isPaid ? 'Paid Position' : 'Volunteer'}</p>
+                        <p><span className="font-medium">Open to:</span> {selectedPost.yearLevel.join(', ')}</p>
+                        <p><span className="font-medium">Deadline:</span> {selectedPost.deadline}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <h2 className="text-xl font-semibold mb-2">Description</h2>
+                    <p className="text-gray-600">{selectedPost.description}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPost.tags.map((tag, index) => (
+                      <span 
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  <div 
+                    onClick={() => {
+                      // Add apply/RSVP logic
+                    }}
+                    className="w-full px-6 py-3 bg-black text-white rounded-md hover:bg-gray-800 transition-colors text-lg font-medium cursor-pointer text-center"
+                    role="button"
+                  >
+                    {selectedPost.type === 'event' ? 'RSVP Now' : 'Apply Now'}
+                  </div>
+                  <div 
+                    onClick={() => {
+                      // Add save logic
+                    }}
+                    className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium cursor-pointer text-center"
+                    role="button"
+                  >
+                    Save for Later
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
