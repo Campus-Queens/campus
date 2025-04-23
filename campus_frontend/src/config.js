@@ -1,17 +1,16 @@
 // Environment-specific configuration
 const getApiConfig = () => {
-  // Check both REACT_APP_ENV and NODE_ENV
-  const env = process.env.REACT_APP_ENV || process.env.NODE_ENV || 'development';
+  // Use Vite's import.meta.env instead of process.env
+  const env = import.meta.env.MODE || 'development';
   
   console.log('Current environment:', {
-    REACT_APP_ENV: process.env.REACT_APP_ENV,
-    NODE_ENV: process.env.NODE_ENV,
+    MODE: import.meta.env.MODE,
     resolved: env
   });
 
   const configs = {
     development: {
-      API_URL: 'http://localhost:8000',
+      API_URL: 'http://localhost:8000/api',
       WS_URL: 'ws://localhost:8000'
     },
     production: {
@@ -19,7 +18,7 @@ const getApiConfig = () => {
       WS_URL: 'wss://campus-backend-if2p.onrender.com'
     },
     test: {
-      API_URL: 'http://localhost:8000',
+      API_URL: 'http://localhost:8000/api',
       WS_URL: 'ws://localhost:8000'
     }
   };

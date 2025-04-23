@@ -11,16 +11,32 @@ class SellerSerializer(serializers.ModelSerializer):
 
 class ListingSerializer(serializers.ModelSerializer):
     seller = SellerSerializer(read_only=True)
-    image = serializers.SerializerMethodField()
+    image = serializers.ImageField(required=False)
 
     class Meta:
         model = Listing
         fields = '__all__'
     
+    def create(self, validated_data):
+        print("\n🔹 Debug - Serializer Create:")
+        print(f"  - Validated data: {validated_data}")
+        if 'image' in validated_data:
+            print(f"  - Image data: {validated_data['image']}")
+        instance = super().create(validated_data)
+        print(f"  - Created instance image path: {instance.image.path if instance.image else 'No image'}")
+        return instance
+
     def get_image(self, obj):
         request = self.context.get('request')
         if obj.image and hasattr(obj.image, 'url'):
-            return request.build_absolute_uri(obj.image.url)
+            full_url = request.build_absolute_uri(obj.image.url)
+            print(f"\n🖼️ Image Debug - Listing {obj.id}:")
+            print(f"  - Image field: {obj.image}")
+            print(f"  - Image path: {obj.image.path if obj.image else 'No path'}")
+            print(f"  - Image URL: {obj.image.url}")
+            print(f"  - Full URL: {full_url}")
+            return full_url
+        print(f"🖼️ Image Debug - Listing {obj.id}: No image available")
         return None
 
     def get_seller_name(self, obj):

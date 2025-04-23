@@ -130,11 +130,7 @@ const Marketplace = () => {
                 <BookCard 
                 key={listing.id}
                 {...listing}
-                image={
-                  listing.image?.startsWith('http')
-                    ? listing.image
-                    : `${API_URL.replace('/api', '')}/media/${listing.image?.split('/media/')[1]}`
-                }
+                image={listing.image}
                 seller_name={listing.seller?.name || "Anonymous"}
                 seller_id={listing.seller?.id}
               />

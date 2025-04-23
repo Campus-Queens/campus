@@ -1,13 +1,12 @@
 import axios from 'axios';
 import { API_URL } from './config';
 
-const baseURL = API_URL || 'https://campus-backend-if2p.onrender.com';
+const baseURL = API_URL || 'http://localhost:8000';
 
 console.log('API Configuration:', {
   configuredApiUrl: API_URL,
   usingBaseUrl: baseURL,
-  environment: process.env.NODE_ENV,
-  reactAppEnv: process.env.REACT_APP_ENV
+  environment: import.meta.env.MODE
 });
 
 const API = axios.create({
@@ -16,7 +15,8 @@ const API = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: false
+  withCredentials: false,
+  timeout: 10000, // 10 second timeout
 });
 
 // Interceptor for auth and logging

@@ -26,8 +26,13 @@ class ListingListCreateView(generics.ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
     
-    
     def perform_create(self, serializer):
+        print("\n🔹 Debug - Create Listing Request:")
+        print(f"  - Files: {self.request.FILES}")
+        if 'image' in self.request.FILES:
+            print(f"  - Image name: {self.request.FILES['image'].name}")
+            print(f"  - Image size: {self.request.FILES['image'].size}")
+            print(f"  - Content type: {self.request.FILES['image'].content_type}")
         serializer.save(seller=self.request.user)
 
     def get_serializer_context(self):

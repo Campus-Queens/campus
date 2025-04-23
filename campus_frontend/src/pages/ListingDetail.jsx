@@ -132,7 +132,7 @@ const ListingDetail = () => {
 
   if (!listing) return null;
 
-  const imageUrl = listing.image ? `${API_URL.replace('/api', '')}/media/${listing.image.split('/media/')[1]}` : "/placeholder.png";
+  const imageUrl = listing.image;
 
   const getConditionBadgeColor = (condition) => {
     if (!condition) return "bg-gray-100 text-gray-800"; 
@@ -270,11 +270,19 @@ const ListingDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Image Section */}
             <div className="h-[500px] w-full">
-              <img
-                src={imageUrl}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-gray-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Details Section */}
@@ -422,11 +430,7 @@ const ListingDetail = () => {
                   <div key={relatedListing.id} className="w-[280px] flex-shrink-0">
                     <BookCard 
                     {...relatedListing}
-                    image={
-                      relatedListing.image?.startsWith('http')
-                        ? relatedListing.image
-                        : `${API_URL.replace('/api', '')}/media/${relatedListing.image?.split('/media/')[1]}`
-                    }
+                    image={relatedListing.image}  // Pass the image URL directly
                     seller_name={relatedListing.seller?.name || relatedListing.seller_name}
                     seller_id={relatedListing.seller?.id || relatedListing.seller}
                   />
