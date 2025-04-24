@@ -18,7 +18,10 @@ const EditProfileModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      user_id: user.id
+    });
     onClose();
   };
 

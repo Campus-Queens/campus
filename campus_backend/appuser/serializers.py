@@ -5,15 +5,22 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)
+    cover_picture = serializers.ImageField(required=False, allow_null=True)
+    
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'year', 'username', 'bio', 'location', 'is_email_verified', 'profile_picture']
+        fields = ['id', 'name', 'email', 'year', 'username', 'bio', 'location', 'is_email_verified', 
+                 'profile_picture', 'cover_picture', 'instagram', 'snapchat', 'linkedin']
         extra_kwargs = {
             'bio': {'required': False},
             'location': {'required': False},
             'username': {'required': False},
             'year': {'required': False, 'default': 1},
-            'profile_picture': {'required': False}
+            'profile_picture': {'required': False},
+            'cover_picture': {'required': False},
+            'instagram': {'required': False},
+            'snapchat': {'required': False},
+            'linkedin': {'required': False}
         }
 
     def validate(self, data):

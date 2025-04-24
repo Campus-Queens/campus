@@ -274,3 +274,13 @@ def debug_users(request):
         'username': user.username
     } for user in users]
     return Response(user_data)
+
+@api_view(['GET'])
+def get_user_profile(request, user_id):
+    """Get a user's profile by ID."""
+    try:
+        user = AppUser.objects.get(id=user_id)
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except AppUser.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

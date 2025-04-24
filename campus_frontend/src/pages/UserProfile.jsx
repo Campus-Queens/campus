@@ -15,8 +15,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // This endpoint needs to be created in the backend
-        const response = await API.get(`appuser/profile/${id}/`);
+        const response = await API.get(`appuser/users/${id}/`);
         setUser(response.data);
         setLoading(false);
       } catch (err) {
@@ -53,12 +52,12 @@ const UserProfile = () => {
       <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button
+          <div
             onClick={() => navigate(-1)}
             className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
             Go Back
-          </button>
+          </div>
         </div>
       </div>
     );
@@ -70,7 +69,7 @@ const UserProfile = () => {
       <div className="relative h-64 bg-gray-200">
         {user?.cover_picture ? (
           <img 
-            src={`${API_URL.replace('/api', '')}${user.cover_picture}`}
+            src={user.cover_picture.startsWith('http') ? user.cover_picture : `${API_URL}${user.cover_picture}`}
             alt="Cover" 
             className="w-full h-full object-cover"
           />
@@ -86,7 +85,7 @@ const UserProfile = () => {
           <div className="absolute -top-12 left-4 h-32 w-32 rounded-full border-4 border-white bg-white shadow-md overflow-hidden">
             {user?.profile_picture ? (
               <img
-                src={`${API_URL.replace('/api', '')}${user.profile_picture}`}
+                src={user.profile_picture.startsWith('http') ? user.profile_picture : `${API_URL}${user.profile_picture}`}
                 alt="Profile"
                 className="h-full w-full object-cover"
               />
@@ -197,10 +196,10 @@ const UserProfile = () => {
                       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
                     >
                       <img 
-                        src={listing.image ? `${API_URL.replace('/api', '')}${listing.image}` : "/placeholder.png"}
-                        alt={listing.title} 
-                        className="w-full h-48 object-cover"
-                      />
+                          src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
+                          alt={listing.title} 
+                          className="w-full h-48 object-cover"
+                        />
                       <div className="p-4">
                         <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
                         <div className="flex items-center justify-between">
