@@ -8,6 +8,7 @@ import { ConditionSelect } from "../components/ConditionSelect";
 import { YearOfStudySelect } from "../components/YearOfStudySelect";
 import { GenderSelect } from "../components/GenderSelect";
 import { ModeOfTravelSelect } from "../components/ModeOfTravelSelect";
+import CharCountInput from "../components/CharCountInput";
 
 const CATEGORIES = {
   BOOKS: 'Books',
@@ -211,48 +212,39 @@ const PostListing = () => {
                     {/* Book-specific fields */}
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="Enter the book title"
                         required
+                        label="Title"
                       />
                     </div>
 
                     {/* Author */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Author *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="author"
                         value={formData.author}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={100}
                         placeholder="Enter the author's name"
                         required
+                        label="Author"
                       />
                     </div>
 
                     {/* Edition */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Edition
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="edition"
                         value={formData.edition}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="e.g., 3rd Edition"
+                        label="Edition"
                       />
                     </div>
 
@@ -303,17 +295,16 @@ const PostListing = () => {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description *
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={500}
                         placeholder="Describe the condition, any highlights, or additional details about the book..."
                         required
+                        type="textarea"
+                        rows={4}
+                        label="Description"
                       />
                     </div>
 
@@ -342,17 +333,14 @@ const PostListing = () => {
 
                     {/* Pickup Location */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Pickup Location *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="pickup_location"
                         value={formData.pickup_location}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="e.g., Library, Student Center, etc."
                         required
+                        label="Pickup Location"
                       />
                     </div>
                   </>
@@ -361,33 +349,29 @@ const PostListing = () => {
                     {/* Sublets-specific fields */}
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="e.g., Single Room Available in 4 Bedroom House"
                         required
+                        label="Title"
                       />
                     </div>
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description (Gender you are looking for) *
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={500}
                         placeholder="Specify preferred gender and any other important details about the living arrangement..."
                         required
+                        type="textarea"
+                        rows={4}
+                        label="Description (Gender you are looking for)"
                       />
                     </div>
 
@@ -411,17 +395,14 @@ const PostListing = () => {
 
                     {/* House Address */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        House Address *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="house_address"
                         value={formData.house_address}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="Full address of the property"
                         required
+                        label="House Address"
                       />
                     </div>
 
@@ -526,33 +507,29 @@ const PostListing = () => {
                     {/* Roommates-specific fields */}
                     {/* Title (Name) */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Name *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="Your full name"
                         required
+                        label="Name"
                       />
                     </div>
 
                     {/* Description (Interests) */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Interests & About Me *
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={500}
                         placeholder="Share your interests, hobbies, lifestyle preferences, and what you're looking for in a roommate..."
                         required
+                        type="textarea"
+                        rows={4}
+                        label="Interests & About Me"
                       />
                     </div>
 
@@ -598,32 +575,27 @@ const PostListing = () => {
 
                     {/* Program */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Program *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="program"
                         value={formData.program}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={100}
                         placeholder="e.g., Computer Science, Engineering, Business..."
                         required
+                        label="Program"
                       />
                     </div>
 
                     {/* Profile Link */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Social Media Profile
-                      </label>
-                      <input
-                        type="url"
+                      <CharCountInput
                         name="profile_link"
                         value={formData.profile_link}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="Link to your Instagram, Facebook, or LinkedIn profile"
+                        type="url"
+                        label="Social Media Profile"
                       />
                     </div>
 
@@ -652,16 +624,15 @@ const PostListing = () => {
 
                     {/* Additional Information */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Additional Information
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="additional_info"
                         value={formData.additional_info}
                         onChange={handleInputChange}
-                        rows="3"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={300}
                         placeholder="Any other details you'd like to share (e.g., sleep schedule, cleanliness preferences, etc.)"
+                        type="textarea"
+                        rows={3}
+                        label="Additional Information"
                       />
                     </div>
                   </>
@@ -670,65 +641,55 @@ const PostListing = () => {
                     {/* Rideshare-specific fields */}
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="e.g., Ride to Toronto for Reading Week"
                         required
+                        label="Title"
                       />
                     </div>
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description *
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={500}
                         placeholder="Additional details about the ride (luggage space, stops along the way, etc.)"
                         required
+                        type="textarea"
+                        rows={4}
+                        label="Description"
                       />
                     </div>
 
                     {/* Pickup Location */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Pickup Location *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="pickup_location"
                         value={formData.pickup_location}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="Where you'll be departing from"
                         required
+                        label="Pickup Location"
                       />
                     </div>
 
                     {/* Dropoff Location */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dropoff Location *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="dropoff_location"
                         value={formData.dropoff_location}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="Where you'll be arriving"
                         required
+                        label="Dropoff Location"
                       />
                     </div>
 
@@ -781,33 +742,29 @@ const PostListing = () => {
                     {/* Other category fields */}
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={50}
                         placeholder="Enter a title for your listing"
                         required
+                        label="Title"
                       />
                     </div>
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description *
-                      </label>
-                      <textarea
+                      <CharCountInput
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={500}
                         placeholder="Describe what you're listing..."
                         required
+                        type="textarea"
+                        rows={4}
+                        label="Description"
                       />
                     </div>
 
@@ -865,17 +822,14 @@ const PostListing = () => {
 
                     {/* Pickup Location */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Pickup Location *
-                      </label>
-                      <input
-                        type="text"
+                      <CharCountInput
                         name="pickup_location"
                         value={formData.pickup_location}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
+                        maxLength={200}
                         placeholder="e.g., Library, Student Center, etc."
                         required
+                        label="Pickup Location"
                       />
                     </div>
                   </>

@@ -1,8 +1,145 @@
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../axios";
 import EditProfileModal from "../components/EditProfileModal";
 import { API_URL } from '../config';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { zoomPlugin } from '@react-pdf-viewer/zoom';
+import { searchPlugin } from '@react-pdf-viewer/search';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/zoom/lib/styles/index.css';
+import '@react-pdf-viewer/search/lib/styles/index.css';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+// Add custom styles to override PDF viewer buttons
+const customStyles = `
+  .rpv-core__viewer-zone button,
+  .rpv-core__minimal-button,
+  .rpv-core__text-layer-button {
+    background-color: transparent !important;
+    color: #000 !important;
+  }
+  .rpv-core__viewer-zone button:hover {
+    background-color: #f3f4f6 !important;
+  }
+`;
+
+// Add custom styles to override PDF viewer tooltips
+const customStylesTooltip = `
+  .rpv-core__tooltip-body {
+    background-color: black !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+  }
+  .rpv-core__tooltip-arrow {
+    border-top-color: black !important;
+  }
+`;
+
+const ResumeModal = ({ isOpen, onClose, resumeFile }) => {
+  if (!isOpen || !resumeFile) return null;
+
+  const [fileUrl, setFileUrl] = useState(null);
+
+  useEffect(() => {
+    if (resumeFile) {
+      const url = URL.createObjectURL(resumeFile);
+      setFileUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [resumeFile]);
+
+  const zoomPluginInstance = zoomPlugin();
+  const searchPluginInstance = searchPlugin();
+
+  const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
+  const { Search } = searchPluginInstance;
+
+  const renderToolbar = (Toolbar) => (
+    <TooltipProvider>
+      <Toolbar>
+        {(props) => {
+          const { items } = props;
+          return (
+            <div className="rpv-toolbar">
+              {items.map((item, index) => (
+                <div key={index} className="rpv-toolbar__item">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {item.element}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{item.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              ))}
+            </div>
+          );
+        }}
+      </Toolbar>
+    </TooltipProvider>
+  );
+
+  if (!fileUrl) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <style>{customStyles}</style>
+      <style>{customStylesTooltip}</style>
+      <div className="w-3/4 h-[85vh] bg-white flex flex-col mx-auto mt-8 mb-16 rounded-lg relative overflow-hidden">
+        <div 
+          className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 cursor-pointer z-[60]"
+          onClick={onClose}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <div className="flex items-center justify-between p-2 border-b">
+          <div className="flex items-center space-x-2">
+            <ZoomOutButton />
+            <ZoomPopover>
+              <div className="px-2">100%</div>
+            </ZoomPopover>
+            <ZoomInButton />
+          </div>
+          <div className="flex-1 mx-4">
+            <Search>
+              {(props) => (
+                <div className="flex items-center">
+                  <input
+                    className="border rounded px-2 py-1 w-1/2"
+                    placeholder="Search..."
+                    type="text"
+                    value={props.keyword}
+                    onChange={(e) => props.setKeyword(e.target.value)}
+                  />
+                </div>
+              )}
+            </Search>
+          </div>
+
+        </div>
+        <div className="w-full h-full bg-white rounded-lg">
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            <Viewer
+              fileUrl={fileUrl}
+              plugins={[zoomPluginInstance, searchPluginInstance]}
+              renderToolbar={renderToolbar}
+              onError={(error) => {
+                console.error('Error loading PDF:', error);
+              }}
+            />
+          </Worker>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -15,6 +152,7 @@ const Profile = () => {
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [savedListings, setSavedListings] = useState([]);
   const [userListings, setUserListings] = useState([]);
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const [formData, setFormData] = useState({
@@ -148,7 +286,19 @@ const Profile = () => {
       console.error("Error updating profile:", error);
     }
   };
-  
+
+  const handleDeleteListing = async (listingId) => {
+    if (window.confirm('Are you sure you want to delete this listing?')) {
+      try {
+        await API.delete(`listings/${listingId}/`);
+        // Update the userListings state to remove the deleted listing
+        setUserListings(prevListings => prevListings.filter(listing => listing.id !== listingId));
+      } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Failed to delete listing. Please try again.');
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -287,8 +437,7 @@ const Profile = () => {
                   <div className="space-y-3">
                     {[
                       { name: 'Instagram', icon: 'instagram', link: formData.instagram },
-                      { name: 'TikTok', icon: 'tiktok', link: formData.tiktok },
-                      { name: 'YouTube', icon: 'youtube', link: formData.youtube },
+                      { name: 'LinkedIn', icon: 'linkedin', link: formData.linkedin },
                       { name: 'Snapchat', icon: 'snapchat', link: formData.snapchat },
                       { name: 'Twitter', icon: 'twitter', link: formData.twitter },
                     ].map((social) => (
@@ -299,11 +448,20 @@ const Profile = () => {
                           </span>
                           <span>{social.name}</span>
                         </div>
-                        <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                          </svg>
-                        </div>
+                        {social.link ? (
+                          <a
+                            href={social.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">Not provided</span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -319,20 +477,36 @@ const Profile = () => {
                   userListings.map((listing) => (
                     <div 
                       key={listing.id} 
-                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
-                      onClick={() => navigate(`/listing/${listing.id}`)}
+                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden relative group"
                     >
-                      <img 
-                        src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
-                        alt={listing.title} 
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
-                        <div className="flex items-center justify-between">
-                          <p className="text-gray-900 font-medium">${listing.price}</p>
-                          <p className="text-gray-500 text-sm">{new Date(listing.created_at).toLocaleDateString()}</p>
+                      <div 
+                        onClick={() => navigate(`/listing/${listing.id}`)}
+                        className="cursor-pointer"
+                      >
+                        <img 
+                          src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
+                          alt={listing.title} 
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="p-4">
+                          <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
+                          <div className="flex items-center justify-between">
+                            <p className="text-gray-900 font-medium">${listing.price}</p>
+                            <p className="text-gray-500 text-sm">{new Date(listing.created_at).toLocaleDateString()}</p>
+                          </div>
                         </div>
+                      </div>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteListing(listing.id);
+                        }}
+                        className="absolute bottom-[74px] right-2 p-2 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity  hover:bg-gray-200"
+                        title="Delete listing"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
                       </div>
                     </div>
                   ))
@@ -376,9 +550,61 @@ const Profile = () => {
                 )}
               </div>
             )}
+
+            {/* Resume Section - Always visible */}
+            <div className="mt-8 border-t border-gray-200 pt-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resume</h2>
+              {formData.resume ? (
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{formData.resume.name}</p>
+                      <p className="text-xs text-gray-500">Last updated: {new Date(formData.resume.lastModified).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsResumeModalOpen(true);
+                      }}
+                      className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                    >
+                      View
+                    </div>
+                    <a
+                      href={URL.createObjectURL(formData.resume)}
+                      download={formData.resume.name}
+                      className="px-3 py-1 text-sm text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                    >
+                      Download
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <p className="mt-2 text-sm text-gray-600">No resume uploaded yet</p>
+                  <p className="text-xs text-gray-500">Upload your resume in the edit profile section</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Resume Modal */}
+      <ResumeModal
+        isOpen={isResumeModalOpen}
+        onClose={() => setIsResumeModalOpen(false)}
+        resumeFile={formData.resume}
+      />
 
       {/* EditProfileModal */}
       <EditProfileModal
