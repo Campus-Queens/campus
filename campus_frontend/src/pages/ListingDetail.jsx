@@ -318,7 +318,10 @@ const ListingDetail = () => {
                 </div>
 
                 {/* Seller Profile */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-8">
+                <div 
+                  onClick={() => navigate(`/users/${listing.seller?.id}`)}
+                  className="bg-gray-50 rounded-lg p-4 mb-8 cursor-pointer hover:bg-gray-100 transition-colors"
+                >
                   <h3 className="text-lg font-medium text-gray-900 mb-4">About the Seller</h3>
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">

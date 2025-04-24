@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from "react-route
 import Header from "./components/Header";
 import Marketplace from "./pages/Marketplace";
 import Profile from "./pages/Profile"
+import UserProfile from "./pages/UserProfile";
 import SignIn from "./pages/SignIn";
 import Register from "./pages/Register";
 import Footer from "./components/Footer"
@@ -28,6 +29,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Marketplace />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/users/:id" element={<UserProfile />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/register" element={<Register />} />
           <Route path="/welcome" element={<Welcome />} />
