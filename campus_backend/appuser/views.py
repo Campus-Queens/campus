@@ -15,6 +15,8 @@ from .email_utils import send_verification_email, send_password_reset_email
 from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework.permissions import AllowAny
+from rest_framework.decorators import parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 
 @api_view(['GET'])
 def get_users(request):
@@ -22,29 +24,46 @@ def get_users(request):
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
-@api_view(['POST'])
+
+@api_view(['PUT'])
+@parser_classes([MultiPartParser, FormParser])
 def edit_profile(request):
     data = request.data
+    print("🔸 DATA:", data)
+    print("🔸 bio:", data.get("bio"))
+    print("🔸 name:", data.get("name"))
+    print("🔸 user_id:", data.get("user_id"))
     user_id = data.get("user_id")
     if not user_id:
-        return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        return Response({"error": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         user = AppUser.objects.get(id=user_id)
         user.username = data.get("username", user.username)
         user.bio = data.get("bio", user.bio)
         user.location = data.get("location", user.location)
 
+        user.instagram = data.get("instagram", user.instagram)
+        user.snapchat = data.get("snapchat", user.snapchat)
+        user.linkedin = data.get("linkedin", user.linkedin)
+
         if 'profile_picture' in request.FILES:
             user.profile_picture = request.FILES['profile_picture']
+
+        if 'cover_picture' in request.FILES:
+            user.cover_picture = request.FILES['cover_picture']
+
         user.save()
 
         return Response({"message": "Profile updated successfully", "user": {
             "name": user.name,
             "email": user.email,
             "bio": user.bio,
-            "location": user.location
+            "location": user.location,
+            "instagram": user.instagram,
+            "snapchat": user.snapchat,
+            "linkedin": user.linkedin,
+            "profile_picture": user.profile_picture.url if user.profile_picture else None,
+            "cover_picture": user.cover_picture.url if user.cover_picture else None,
         }}, status=status.HTTP_200_OK)
     
     except Exception as e:
@@ -79,6 +98,12 @@ def sign_in(request):
                     "email": user.email,
                     "bio": user.bio,
                     "location": user.location,
+                    "instagram": user.instagram,
+                    "snapchat": user.snapchat,
+                    "linkedin": user.linkedin,
+                    "profile_picture": user.profile_picture.url if user.profile_picture else None,
+                    "cover_picture": user.cover_picture.url if user.cover_picture else None,
+        
                 }
             }
             print("🟢 Sign-in successful")  # Debug log

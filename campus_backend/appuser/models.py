@@ -25,8 +25,16 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField(blank=True, default='')
     location = models.CharField(max_length=255, blank=True, default='')
     profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
+    cover_picture = models.ImageField(upload_to="cover_pics/", blank=True, null=True)
+    
+
     year = models.IntegerField(default=1)
     created_at = models.DateTimeField(default=timezone.now)
+
+    #Social Medias
+    instagram = models.CharField(max_length=255,blank=True, null = True)
+    linkedin = models.CharField(max_length=255,blank=True, null = True)
+    snapchat = models.CharField(max_length=255,blank=True, null = True)
 
     # Email verification fields
     is_email_verified = models.BooleanField(default=False)

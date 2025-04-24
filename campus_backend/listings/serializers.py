@@ -5,9 +5,17 @@ from .models import Listing, BookListing, SubletListing, Roommates, RideShare, E
 User = get_user_model() 
 
 class SellerSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'name', 'username', 'created_at', 'profile_picture']
+
+    def get_profile_picture(self, obj):
+        request = self.context.get('request')
+        if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
+            return request.build_absolute_uri(obj.profile_picture.url)
+        return None
 
 class ListingSerializer(serializers.ModelSerializer):
     seller = SellerSerializer(read_only=True)

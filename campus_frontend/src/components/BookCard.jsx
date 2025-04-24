@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 
-const BookCard = ({ id, title, course_code, price, condition, image, author, edition, category, seller_name, seller_id }) => {
+const BookCard = ({ id, title, course_code, price, condition, image, author, edition, category, seller }) => {
   const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
 
@@ -94,7 +94,7 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
     }
     setIsSaved(!isSaved);
   };
-
+  console.log("👤 Seller Image URL:", `${API_URL.replace('/api', '')}${seller?.profile_picture}`);
   return (
     <div 
       onClick={handleClick}
@@ -165,14 +165,25 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           {/* Seller Profile */}
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
-              <span className="text-xs font-medium text-gray-600">
-                {seller_name ? seller_name[0].toUpperCase() : '?'}
-              </span>
-            </div>
-            <span className="hidden sm:block text-sm text-gray-600 truncate max-w-[120px]">
-              {seller_name || 'Anonymous'}
-            </span>
+          <div className="w-7 h-7 rounded-full overflow-hidden">
+            {seller?.profile_picture ? (
+              <img 
+                src={seller?.profile_picture?.startsWith('http') 
+                  ? seller.profile_picture 
+                  : `${API_URL.replace('/api', '')}${seller.profile_picture}`}
+              
+                alt={seller.name} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="bg-gray-100 w-full h-full flex items-center justify-center text-xs text-gray-600">
+                {seller?.name?.[0]?.toUpperCase() || "?"}
+              </div>
+            )}
+          </div>
+          <span className="hidden sm:block text-sm text-gray-600 truncate max-w-[120px]">
+            {seller?.name || 'Anonymous'}
+          </span>
           </div>
 
           {/* Message Button */}

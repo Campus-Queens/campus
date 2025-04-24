@@ -150,6 +150,7 @@ const Profile = () => {
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [profileImageFile, setProfileImageFile] = useState(null);
+  const [coverImageFile, setCoverImageFile] = useState(null);
   const [savedListings, setSavedListings] = useState([]);
   const [userListings, setUserListings] = useState([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
@@ -161,11 +162,10 @@ const Profile = () => {
     yearOfStudy: "",
     bio: "",
     instagram: "",
-    tiktok: "",
-    youtube: "",
     snapchat: "",
-    twitter: "",
+    linkedin: "",
   });
+
 
   // Set active tab based on URL parameter
   useEffect(() => {
@@ -183,37 +183,33 @@ const Profile = () => {
         navigate("/signin");
         return;
       }
-
+  
       try {
-        const user = JSON.parse(userData);
-        setUser(user);
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+  
         setFormData({
-          name: user.name || "",
-          major: user.major || "",
-          yearOfStudy: user.yearOfStudy || "",
-          bio: user.bio || "",
-          instagram: user.instagram || "",
-          tiktok: user.tiktok || "",
-          youtube: user.youtube || "",
-          snapchat: user.snapchat || "",
-          twitter: user.twitter || "",
+          name: parsedUser.name || "",
+          major: parsedUser.major || "",
+          yearOfStudy: parsedUser.yearOfStudy || "",
+          bio: parsedUser.bio || "",
+          instagram: parsedUser.instagram || "",
+          snapchat: parsedUser.snapchat || "",
+          linkedin: parsedUser.linkedin || "",
         });
-
+  
         const savedListingIds = JSON.parse(localStorage.getItem('savedListings') || '[]');
-        
-        // Fetch all listings
+  
         const response = await axios.get('http://localhost:8000/api/listings/');
-        
-        // Filter saved listings
+  
         if (savedListingIds.length > 0) {
           const savedListingsData = response.data.filter(listing => savedListingIds.includes(listing.id));
           setSavedListings(savedListingsData);
         }
-
-        // Filter user's listings
-        const userListingsData = response.data.filter(listing => listing.seller?.id === user.id);
+  
+        const userListingsData = response.data.filter(listing => listing.seller?.id === parsedUser.id);
         setUserListings(userListingsData);
-
+  
       } catch (err) {
         console.error("Error fetching data:", err);
         if (!err.response || err.response.status === 401) {
@@ -222,8 +218,18 @@ const Profile = () => {
         }
       }
     };
+  
     fetchProfile();
   }, [navigate]);
+  
+  // ✅ NEW useEffect — update images when user is set
+  useEffect(() => {
+    if (user) {
+      setProfileImage(user.profile_picture ? `${API_URL.replace('/api', '')}${user.profile_picture}` : null);
+      setCoverPhoto(user.cover_picture ? `${API_URL.replace('/api', '')}${user.cover_picture}` : null);
+    }
+  }, [user]);
+  
 
   const handleProfileImageClick = () => {
     profileInputRef.current.click();
@@ -241,8 +247,10 @@ const Profile = () => {
         if (type === 'profile') {
           setProfileImage(imageUrl);        
           setProfileImageFile(file); 
-        } else {
+        }
+        if (type === 'cover') {
           setCoverPhoto(imageUrl);
+          setCoverImageFile(file);  
         }
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -264,11 +272,17 @@ const Profile = () => {
         if (value !== undefined && value !== '') {
           data.append(key, value);
         }
-      });
+      }); 
   
       if (profileImageFile) {
         data.append("profile_picture", profileImageFile); 
       }
+
+      if (coverImageFile) {
+        data.append("cover_picture", coverImageFile); 
+      }
+
+      data.append("user_id", user.id);
       
       const response = await API.put("appuser/edit-profile/", data, {
         headers: {
@@ -316,14 +330,7 @@ const Profile = () => {
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-blue-100 to-blue-50" />
         )}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-white">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-            </svg>
-          </div>
-        </div>
+       
       </div>
 
       {/* Profile Content */}
@@ -439,7 +446,6 @@ const Profile = () => {
                       { name: 'Instagram', icon: 'instagram', link: formData.instagram },
                       { name: 'LinkedIn', icon: 'linkedin', link: formData.linkedin },
                       { name: 'Snapchat', icon: 'snapchat', link: formData.snapchat },
-                      { name: 'Twitter', icon: 'twitter', link: formData.twitter },
                     ].map((social) => (
                       <div key={social.name} className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -608,28 +614,18 @@ const Profile = () => {
 
       {/* EditProfileModal */}
       <EditProfileModal
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={handleSubmit}
-      />
+      isOpen={isEditing}
+      onClose={() => setIsEditing(false)}
+      formData={formData}
+      setFormData={setFormData}
+      onSubmit={handleSubmit}
+      profileImage={profileImage}              
+      coverPhoto={coverPhoto}                 
+      user={user}                             
+      handleImageChange={handleImageChange}    
+    />
 
-      {/* Hidden file inputs */}
-      <input
-        type="file"
-        ref={profileInputRef}
-        onChange={(e) => handleImageChange(e, 'profile')}
-        accept="image/*"
-        className="hidden"
-      />
-      <input
-        type="file"
-        ref={coverInputRef}
-        onChange={(e) => handleImageChange(e, 'cover')}
-        accept="image/*"
-        className="hidden"
-      />
+      
     </div>
   );
 };

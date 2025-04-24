@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
+import { API_URL } from '../config';
 
 const CATEGORIES = [
   {
@@ -296,9 +297,17 @@ const Header = () => {
                         {/* User Info Section */}
                         <div className="p-4 border-b border-gray-200">
                           <div className="flex items-center space-x-3">
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-medium text-gray-600">
-                              {user?.email?.[0]?.toUpperCase() || "?"}
-                            </div>
+                          <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center text-lg font-medium text-gray-600">
+                            {user?.profile_picture ? (
+                              <img
+                                src={`${API_URL.replace('/api', '')}${user.profile_picture}`}
+                                alt="Profile"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              user?.email?.[0]?.toUpperCase() || "?"
+                            )}
+                          </div>
                             <div>
                               <p className="font-medium text-gray-900">{user?.name || user?.email}</p>
                               <p className="text-sm text-gray-500">{user?.email}</p>

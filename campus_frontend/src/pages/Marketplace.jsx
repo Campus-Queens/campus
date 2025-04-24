@@ -131,8 +131,7 @@ const Marketplace = () => {
                 key={listing.id}
                 {...listing}
                 image={listing.image}
-                seller_name={listing.seller?.name || "Anonymous"}
-                seller_id={listing.seller?.id}
+                seller={listing.seller}
               />
               ))}
             </div>

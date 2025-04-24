@@ -6,6 +6,7 @@ from .serializers import ListingSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import generics, filters
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Listing, BookListing, SubletListing, Roommates, RideShare, EventsAndOther
 from .serializers import (
@@ -44,9 +45,16 @@ class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ListingSerializer
 
     def get_serializer_context(self):
-        return {'request': self.request}
 
+        return {'request': self.request}
     
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.seller != request.user:
+            raise PermissionDenied("Not your listing.")
+        
+        return super().destroy(request, *args, **kwargs)
 
 # ✅ Book Listings
 class BookListingListCreateView(generics.ListCreateAPIView):

@@ -325,7 +325,11 @@ const ListingDetail = () => {
                       <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
                       {listing.seller?.profile_picture ? (
                         <img
-                          src={`${API_URL.replace('/api', '')}${listing.seller.profile_picture}`}
+                          src={
+                            listing.seller?.profile_picture?.startsWith('http')
+                              ? listing.seller.profile_picture
+                              : `${API_URL.replace('/api', '')}${listing.seller.profile_picture}`
+                        }
                           alt={listing.seller?.username || 'Seller'}
                           className="h-12 w-12 rounded-full object-cover"
                         />

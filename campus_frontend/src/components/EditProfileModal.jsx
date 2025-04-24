@@ -1,6 +1,17 @@
 import React, { useRef } from 'react';
+import { API_URL } from '../config';
 
-const EditProfileModal = ({ isOpen, onClose, formData, setFormData, onSubmit }) => {
+const EditProfileModal = ({
+  isOpen,
+  onClose,
+  formData,
+  setFormData,
+  onSubmit,
+  profileImage,        
+  coverPhoto,          
+  user,               
+  handleImageChange,   
+}) => {
   if (!isOpen) return null;
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
@@ -35,6 +46,44 @@ const EditProfileModal = ({ isOpen, onClose, formData, setFormData, onSubmit }) 
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="mb-6">
+  <h2 className="text-md font-semibold text-gray-900 mb-4">Images</h2>
+  
+              {/* Profile Picture */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={profileImage || (user?.profile_picture && `${API_URL.replace('/api', '')}${user.profile_picture}`)}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-full object-cover bg-gray-200"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e, 'profile')}
+                  />
+                </div>
+              </div>
+
+              {/* Cover Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cover Picture</label>
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={coverPhoto || (user?.cover_picture && `${API_URL.replace('/api', '')}${user.cover_picture}`)}
+                    alt="Cover"
+                    className="h-16 w-28 rounded object-cover bg-gray-200"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e, 'cover')}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
