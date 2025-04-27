@@ -20,7 +20,7 @@ const EditProfileModal = ({
     e.preventDefault();
     onSubmit({
       ...formData,
-      user_id: user.id
+      user_id: user?.id ?? ""
     });
     onClose();
   };

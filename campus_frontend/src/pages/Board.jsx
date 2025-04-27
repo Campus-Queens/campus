@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import ShareModal from '@/components/ShareModal';
+import BoardPostModal from '@/components/BoardPostModal';
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 
@@ -18,6 +20,9 @@ const Board = () => {
     postedBy: false,
     location: false
   });
+  const [savedBoardPosts, setSavedBoardPosts] = useState([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isBoardPostModalOpen, setIsBoardPostModalOpen] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -123,6 +128,41 @@ const Board = () => {
     }));
   };
 
+  useEffect(() => {
+    // Load saved posts from localStorage on mount
+    const saved = localStorage.getItem('savedBoardPosts');
+    if (saved) {
+      setSavedBoardPosts(JSON.parse(saved));
+    }
+  }, []);
+
+  const savePostForLater = (post) => {
+    // Avoid duplicates
+    if (savedBoardPosts.some(p => p.id === post.id)) return;
+    const updated = [...savedBoardPosts, post];
+    setSavedBoardPosts(updated);
+    localStorage.setItem('savedBoardPosts', JSON.stringify(updated));
+  };
+
+  const removeSavedPost = (postId) => {
+    const updated = savedBoardPosts.filter(p => p.id !== postId);
+    setSavedBoardPosts(updated);
+    localStorage.setItem('savedBoardPosts', JSON.stringify(updated));
+  };
+
+  const handleBoardPost = (postData) => {
+    // Here you would typically make an API call to save the post
+    console.log('New board post:', postData);
+    // For now, we'll just add it to the posts array
+    const newPost = {
+      id: posts.length + 1,
+      ...postData,
+      postedAt: 'Just now',
+      tags: postData.tags
+    };
+    setPosts(prev => [newPost, ...prev]);
+  };
+
   const renderTopNav = () => (
     <div className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -148,10 +188,6 @@ const Board = () => {
             >
               Nightlife
             </div>
-
-
-
-
             <div 
               onClick={() => setActiveTab('myBoard')}
               className={`cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -185,7 +221,7 @@ const Board = () => {
           </div>
           <div className="flex items-center">
             <div 
-              onClick={() => setActiveTab('post')}
+              onClick={() => setIsBoardPostModalOpen(true)}
               className="ml-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer"
             >
               Post Opportunity
@@ -196,60 +232,78 @@ const Board = () => {
     </div>
   );
 
-  const renderPostCard = (post) => (
-    <div
-      key={post.id}
-      onClick={() => setSelectedPost(selectedPost?.id === post.id ? null : post)}
-      className="bg-white rounded-lg shadow mb-4 p-6 cursor-pointer hover:shadow-md transition-shadow mx-4"
-    >
-      <div className="flex items-start space-x-4">
-        <div className="h-12 w-12 rounded-full bg-gray-200 flex-shrink-0">
-          {/* Replace with actual logo */}
-          <div className="h-full w-full rounded-full flex items-center justify-center text-gray-500 text-lg font-medium">
-            {post.organization[0]}
-          </div>
+  const renderPostCard = (post) => {
+    const isSaved = savedBoardPosts.some(p => p.id === post.id);
+    return (
+      <div
+        key={post.id}
+        onClick={() => setSelectedPost(selectedPost?.id === post.id ? null : post)}
+        className="bg-white rounded-lg shadow mb-4 p-6 cursor-pointer hover:shadow-md transition-shadow mx-4 relative"
+      >
+        {/* Bookmark icon in top right */}
+        <div
+          onClick={e => {
+            e.stopPropagation();
+            if (isSaved) {
+              removeSavedPost(post.id);
+            } else {
+              savePostForLater(post);
+            }
+          }}
+          className={`absolute top-4 right-4 cursor-pointer flex items-center border border-gray-300 p-2 rounded-md hover:bg-gray-100 transition-colors justify-center ${isSaved ? 'text-black' : 'text-gray-700 hover:text-black'}`}
+          title={isSaved ? 'Remove from Saved' : 'Save for Later'}
+          aria-label={isSaved ? 'Remove from Saved' : 'Save for Later'}
+        >
+          {isSaved ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+              <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+            </svg>
+          )}
         </div>
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
-              <p className="text-gray-600">{post.organization}</p>
-              <div className="flex items-center mt-2 text-sm text-gray-500">
-                <span>{post.type === 'event' ? post.date : post.postedAt}</span>
-                {post.type === 'event' && (
-                  <>
-                    <span className="mx-2">•</span>
-                    <span>{post.time}</span>
-                    <span className="mx-2">•</span>
-                    <span>{post.location}</span>
-                  </>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {post.tags.map((tag, index) => (
-                  <span 
-                    key={index}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+        <div className="flex items-start space-x-4">
+          <div className="h-12 w-12 rounded-full bg-gray-200 flex-shrink-0">
+            {/* Replace with actual logo */}
+            <div className="h-full w-full rounded-full flex items-center justify-center text-gray-500 text-lg font-medium">
+              {post.organization[0]}
             </div>
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                // Add apply/RSVP logic
-              }}
-              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
-            >
-              {post.type === 'event' ? 'RSVP' : 'Apply'}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
+                <p className="text-gray-600">{post.organization}</p>
+                <div className="flex items-center mt-2 text-sm text-gray-500">
+                  <span>{post.type === 'event' ? post.date : post.postedAt}</span>
+                  {post.type === 'event' && (
+                    <>
+                      <span className="mx-2">•</span>
+                      <span>{post.time}</span>
+                      <span className="mx-2">•</span>
+                      <span>{post.location}</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {post.tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderMainContent = () => {
     switch (activeTab) {
@@ -277,7 +331,24 @@ const Board = () => {
         return (
           <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold mb-6">My Saved Items</h2>
-            {/* Add saved posts, followed clubs, etc. */}
+            {savedBoardPosts.length === 0 ? (
+              <div className="text-gray-500">No saved posts yet.</div>
+            ) : (
+              savedBoardPosts.map(post => (
+                <div key={post.id} className="bg-white rounded-lg shadow mb-4 p-6 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">{post.title}</h3>
+                    <p className="text-gray-600">{post.organization}</p>
+                  </div>
+                  <button
+                    onClick={() => removeSavedPost(post.id)}
+                    className="ml-4 px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         );
       case 'nightlife':
@@ -794,14 +865,44 @@ const Board = () => {
                   >
                     {selectedPost.type === 'event' ? 'RSVP Now' : 'Apply Now'}
                   </div>
-                  <div 
-                    onClick={() => {
-                      // Add save logic
-                    }}
-                    className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium cursor-pointer text-center"
-                    role="button"
-                  >
-                    Save for Later
+                  <div className="mt-4 flex flex-row items-center gap-4">
+                    {/* Save for Later icon */}
+                    <div
+                      onClick={() => {
+                        if (selectedPost) {
+                          const isSaved = savedBoardPosts.some(p => p.id === selectedPost.id);
+                          if (isSaved) {
+                            removeSavedPost(selectedPost.id);
+                          } else {
+                            savePostForLater(selectedPost);
+                          }
+                        }
+                      }}
+                      className={`cursor-pointer flex items-center justify-center ${savedBoardPosts.some(p => p.id === selectedPost?.id) ? 'text-black' : 'text-gray-700 hover:text-black'}`}
+                      title={savedBoardPosts.some(p => p.id === selectedPost?.id) ? 'Remove from Saved' : 'Save for Later'}
+                      aria-label={savedBoardPosts.some(p => p.id === selectedPost?.id) ? 'Remove from Saved' : 'Save for Later'}
+                    >
+                      {savedBoardPosts.some(p => p.id === selectedPost?.id) ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                          <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                        </svg>
+                      )}
+                    </div>
+                    {/* Share icon (ListingDetail style) */}
+                    <div
+                      className="cursor-pointer flex items-center justify-center text-gray-700 hover:text-black"
+                      title="Share"
+                      aria-label="Share"
+                      onClick={() => setIsShareModalOpen(true)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -809,6 +910,16 @@ const Board = () => {
           )}
         </div>
       </div>
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        post={selectedPost}
+      />
+      <BoardPostModal
+        isOpen={isBoardPostModalOpen}
+        onClose={() => setIsBoardPostModalOpen(false)}
+        onSubmit={handleBoardPost}
+      />
     </div>
   );
 };

@@ -120,3 +120,24 @@ button:not([role="checkbox"]):focus-visible {
   }
 }
 
+/* Remove default blue focus ring and set a black focus ring for accessibility */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #000 !important;
+}
+
+*:focus-visible {
+  outline: 2px solid #000 !important;
+}
+
+/* Remove Tailwind's default blue ring if present */
+.ring,
+.ring-offset-2,
+.ring-blue-500,
+.focus\:ring-blue-500,
+.focus\:ring {
+  --tw-ring-color: #000 !important;
+  box-shadow: 0 0 0 2px #000 !important;
+}
+

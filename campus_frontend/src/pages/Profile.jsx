@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../axios";
 import EditProfileModal from "../components/EditProfileModal";
+import UpgradeModal from "../components/UpgradeModal";
 import { API_URL } from '../config';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { zoomPlugin } from '@react-pdf-viewer/zoom';
@@ -38,6 +39,28 @@ const customStylesTooltip = `
     border-top-color: black !important;
   }
 `;
+
+// New SocialMediaIcon component
+const SocialMediaIcon = ({ type, link }) => {
+  if (!link) return null;
+  
+  const iconMap = {
+    instagram: "fab fa-instagram",
+    linkedin: "fab fa-linkedin",
+    snapchat: "fab fa-snapchat-ghost"
+  };
+
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <i className={`${iconMap[type]} text-xl`}></i>
+    </a>
+  );
+};
 
 const ResumeModal = ({ isOpen, onClose, resumeFile }) => {
   if (!isOpen || !resumeFile) return null;
@@ -165,7 +188,7 @@ const Profile = () => {
     snapchat: "",
     linkedin: "",
   });
-
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Set active tab based on URL parameter
   useEffect(() => {
@@ -361,9 +384,17 @@ const Profile = () => {
           {/* Name and Buttons */}
           <div className="pt-20 pb-4 flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {formData.name || "Student Name"}
-              </h1>
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {formData.name || "Student Name"}
+                </h1>
+                {/* Social Media Icons */}
+                <div className="flex items-center space-x-3">
+                  <SocialMediaIcon type="instagram" link={formData.instagram} />
+                  <SocialMediaIcon type="linkedin" link={formData.linkedin} />
+                  <SocialMediaIcon type="snapchat" link={formData.snapchat} />
+                </div>
+              </div>
               <p className="text-gray-600">
                 {formData.major} {formData.yearOfStudy ? `- ${formData.yearOfStudy}` : ""}
               </p>
@@ -386,7 +417,15 @@ const Profile = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
                 <span>Edit Profile</span>
+
+
               </div>
+                <div
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 cursor-pointer"
+                >
+                  <span>Post on Board</span>
+                </div>
             </div>
           </div>
 
@@ -625,7 +664,15 @@ const Profile = () => {
       handleImageChange={handleImageChange}    
     />
 
-      
+      {/* UpgradeModal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        onSubmit={(message) => {
+          // TODO: handle upgrade logic (e.g., API call, update user state)
+          alert("Upgrade request submitted: " + message);
+        }}
+      />
     </div>
   );
 };

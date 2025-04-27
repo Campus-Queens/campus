@@ -3,6 +3,28 @@ import { useParams, useNavigate } from "react-router-dom";
 import API from "../axios";
 import { API_URL } from '../config';
 
+// New SocialMediaIcon component
+const SocialMediaIcon = ({ type, link }) => {
+  if (!link) return null;
+  
+  const iconMap = {
+    instagram: "fab fa-instagram",
+    linkedin: "fab fa-linkedin",
+    snapchat: "fab fa-snapchat-ghost"
+  };
+
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <i className={`${iconMap[type]} text-xl`}></i>
+    </a>
+  );
+};
+
 const UserProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -98,11 +120,19 @@ const UserProfile = () => {
             )}
           </div>
 
-          {/* Name and Info */}
+          {/* Name and Info with Social Media Icons */}
           <div className="pt-20 pb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {user?.name || "User"}
-            </h1>
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {user?.name || "User"}
+              </h1>
+              {/* Social Media Icons */}
+              <div className="flex items-center space-x-3">
+                <SocialMediaIcon type="instagram" link={user?.instagram} />
+                <SocialMediaIcon type="linkedin" link={user?.linkedin} />
+                <SocialMediaIcon type="snapchat" link={user?.snapchat} />
+              </div>
+            </div>
             <p className="text-gray-600">
               {user?.major} {user?.yearOfStudy ? `- ${user?.yearOfStudy}` : ""}
             </p>
@@ -137,49 +167,13 @@ const UserProfile = () => {
           {/* Tab Content */}
           <div className="py-6">
             {activeTab === 'about' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
                 {/* About Section */}
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">About</h2>
                   <p className="text-gray-600 whitespace-pre-wrap">
                     {user?.bio || "No bio available."}
                   </p>
-                </div>
-
-                {/* Social Media Links */}
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h2>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Instagram', icon: 'instagram', link: user?.instagram },
-                      { name: 'LinkedIn', icon: 'linkedin', link: user?.linkedin },
-                      { name: 'Snapchat', icon: 'snapchat', link: user?.snapchat },
-                      { name: 'Twitter', icon: 'twitter', link: user?.twitter },
-                    ].map((social) => (
-                      <div key={social.name} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="w-6 h-6 flex items-center justify-center">
-                            <i className={`fab fa-${social.icon}`}></i>
-                          </span>
-                          <span>{social.name}</span>
-                        </div>
-                        {social.link ? (
-                          <a
-                            href={social.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                            </svg>
-                          </a>
-                        ) : (
-                          <span className="text-gray-400">Not provided</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             ) : (
