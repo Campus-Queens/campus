@@ -5,6 +5,7 @@ import ShareModal from '@/components/ShareModal';
 import BoardPostModal from '@/components/BoardPostModal';
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
+import API from '../axios';
 
 const Board = () => {
   const navigate = useNavigate();
@@ -37,36 +38,19 @@ const Board = () => {
     },
   });
 
-  // Dummy data for demonstration
-  const posts = [
-    {
-      id: 1,
-      type: 'hiring',
-      title: "Marketing Lead for Queen's eCommerce Club",
-      organization: "Queen's eCommerce Club",
-      logo: "/path-to-logo.png",
-      description: "Looking for a creative and driven marketing lead to join our executive team.",
-      tags: ['Marketing', 'Paid', 'Leadership', 'FirstYearsWelcome'],
-      postedAt: '2 days ago',
-      deadline: '2024-04-01',
-      isPaid: true,
-      yearLevel: ['All Years'],
-      category: 'Business'
-    },
-    {
-      id: 2,
-      type: 'event',
-      title: "Tech Workshop: Intro to React",
-      organization: "QWEB",
-      logo: "/path-to-logo.png",
-      description: "Learn the basics of React in this hands-on workshop.",
-      tags: ['Tech', 'Workshop', 'Development', 'Beginner'],
-      date: '2024-03-20',
-      time: '5:30 PM',
-      location: 'Walter Light Hall 205',
-      category: 'Engineering'
-    }
-  ];
+const [posts, setPosts] = useState([]);
+
+const getBoardPosts = async () => {
+  try {
+    const response = await API.get('board/');  // assuming your GET endpoint is ready
+    console.log("Fetched board posts:", response.data);
+    setPosts(response.data);
+  } catch (error) {
+    console.error("Error fetching board posts:", error);
+  }
+};
+
+ 
 
   const filterOptions = {
     postType: [
@@ -136,6 +120,11 @@ const Board = () => {
     }
   }, []);
 
+  useEffect(() => {
+    getBoardPosts();
+  }, []);
+  
+
   const savePostForLater = (post) => {
     // Avoid duplicates
     if (savedBoardPosts.some(p => p.id === post.id)) return;
@@ -150,18 +139,36 @@ const Board = () => {
     localStorage.setItem('savedBoardPosts', JSON.stringify(updated));
   };
 
-  const handleBoardPost = (postData) => {
-    // Here you would typically make an API call to save the post
-    console.log('New board post:', postData);
-    // For now, we'll just add it to the posts array
-    const newPost = {
-      id: posts.length + 1,
-      ...postData,
-      postedAt: 'Just now',
-      tags: postData.tags
-    };
-    setPosts(prev => [newPost, ...prev]);
+  const handleBoardPost = async (formData) => {
+    try {
+      const payload = {
+        title: formData.title,
+        organization: formData.organization,
+        type: formData.type.toUpperCase(),
+        category: formData.category.toUpperCase(),
+        description: formData.description,
+        paid_position: formData.isPaid,
+        open_to: formData.yearLevel || [],
+        application_deadline: formData.deadline || null,
+        date: formData.date || null,
+        time: formData.time || null,
+        location: formData.location || "",
+        tags: Array.isArray(formData.tags) ? formData.tags.join(", ") : (formData.tags || "")
+      };
+
+      console.log("🚀 Sending Payload:", payload);
+
+  
+      const response = await API.post('board/create/', payload);
+      await getBoardPosts();
+  
+      console.log("Board post created successfully:", response.data);
+  
+    } catch (error) {
+      console.error("Error creating board post:", error);
+    }
   };
+  
 
   const renderTopNav = () => (
     <div className="bg-white border-b border-gray-200">
@@ -234,6 +241,7 @@ const Board = () => {
 
   const renderPostCard = (post) => {
     const isSaved = savedBoardPosts.some(p => p.id === post.id);
+    const tags = typeof post.tags === 'string' ? post.tags.split(',').map(tag => tag.trim()) : (post.tags || []);
     return (
       <div
         key={post.id}
@@ -288,7 +296,7 @@ const Board = () => {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {post.tags.map((tag, index) => (
+                  {tags.map((tag, index) => (
                     <span 
                       key={index}
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"

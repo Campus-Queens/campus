@@ -39,6 +39,7 @@ def edit_profile(request):
     try:
         user = AppUser.objects.get(id=user_id)
         user.username = data.get("username", user.username)
+        user.name = data.get("name", user.name)
         user.bio = data.get("bio", user.bio)
         user.location = data.get("location", user.location)
 

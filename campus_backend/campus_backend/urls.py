@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/listings/', include('listings.urls')),
     path('api/chats/', include('chats.urls')),
     path('api/chats/', include('chat_messages.urls')),
+    path('api/board/', include('boardlisting.urls'))
 ]
 
 

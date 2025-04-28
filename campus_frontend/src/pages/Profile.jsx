@@ -315,8 +315,11 @@ const Profile = () => {
   
       if (response.status === 200) {
         const updatedUser = response.data.user;
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        const mergedUser = { ...storedUser, ...updatedUser };
+      
+        localStorage.setItem('user', JSON.stringify(mergedUser));
+        setUser(mergedUser);
         setIsEditing(false);
       }
     } catch (error) {

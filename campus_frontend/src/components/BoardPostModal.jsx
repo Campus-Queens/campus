@@ -213,11 +213,8 @@ Submitted on: ${new Date().toLocaleString()}
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-200">
                     <SelectItem value="business" className="text-gray-700 hover:bg-gray-50">Business</SelectItem>
-                    <SelectItem value="engineering" className="text-gray-700 hover:bg-gray-50">Engineering</SelectItem>
-                    <SelectItem value="health" className="text-gray-700 hover:bg-gray-50">Health</SelectItem>
-                    <SelectItem value="arts" className="text-gray-700 hover:bg-gray-50">Arts</SelectItem>
-                    <SelectItem value="stem" className="text-gray-700 hover:bg-gray-50">STEM</SelectItem>
-                    <SelectItem value="nonprofit" className="text-gray-700 hover:bg-gray-50">Non-Profit</SelectItem>
+                    <SelectItem value="club" className="text-gray-700 hover:bg-gray-50">Club</SelectItem>
+                    <SelectItem value="Night Life" className="text-gray-700 hover:bg-gray-50">Night Life</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -352,12 +349,12 @@ Submitted on: ${new Date().toLocaleString()}
               >
                 Cancel
               </div>
-              <div
+              <button
                 type="submit"
                 className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
               >
                 Post Opportunity
-              </div>
+              </button>
             </div>
           </form>
         )}
