@@ -23,7 +23,10 @@ const config = {
       colors: {
         border: "var(--border)",
         input: "var(--input)",
-        ring: "var(--ring)",
+        ring: {
+          DEFAULT: "var(--ring)",
+          "50": "rgb(var(--ring) / 0.5)",
+        },
         background: "var(--background)",
         foreground: "var(--foreground)",
         primary: {

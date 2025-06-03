@@ -14,6 +14,7 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [priceRange, setPriceRange] = useState({ minPrice: null, maxPrice: null });
   const { searchTerm } = useSearch();
 
   const fetchListings = async () => {
@@ -43,12 +44,23 @@ const Marketplace = () => {
       listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.price.toString().includes(searchTerm);
     
-    return matchesCategories && matchesSearch;
+    // Add price range filtering
+    const price = Number(listing.price);
+    const matchesPriceRange = (
+      (priceRange.minPrice === null || price >= priceRange.minPrice) &&
+      (priceRange.maxPrice === null || price <= priceRange.maxPrice)
+    );
+    
+    return matchesCategories && matchesSearch && matchesPriceRange;
   });
 
   const handleFiltersSubmit = (filters) => {
     console.log('Applying filters:', filters);
     setSelectedCategories(filters.categories || []);
+    setPriceRange({
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice
+    });
   };
 
   if (loading) {
