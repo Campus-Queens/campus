@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 
-const BookCard = ({ id, title, course_code, price, condition, image, author, edition, category, seller }) => {
+const BookCard = ({ id, title, course_code, price, condition, image, author, edition, category, seller, onClick }) => {
   const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
 
@@ -56,14 +56,19 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
   }, [id, image, imageUrl, API_URL]);
 
   const handleClick = () => {
-    // Scroll to top before navigating
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'instant'
-    });
-    console.log('Navigating to listing:', id);
-    navigate(`/listing/${id}`);
+    if (onClick) {
+      // Use the provided onClick handler (for mobile drawer)
+      onClick();
+    } else {
+      // Default behavior: navigate to listing page
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant'
+      });
+      console.log('Navigating to listing:', id);
+      navigate(`/listing/${id}`);
+    }
   };
 
   const handleMessageClick = (e) => {
@@ -73,7 +78,7 @@ const BookCard = ({ id, title, course_code, price, condition, image, author, edi
       navigate('/signin?returnTo=' + encodeURIComponent(window.location.pathname));
       return;
     }
-    navigate(`/messages?seller=${seller_id}&listing=${id}`);
+    navigate(`/messages?seller=${seller?.id}&listing=${id}`);
   };
 
   const handleSaveClick = (e) => {

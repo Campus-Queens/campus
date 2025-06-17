@@ -176,7 +176,7 @@ button:not([role="checkbox"]):focus-visible {
     @apply border-border;
   }
   *:focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-[var(--ring)] opacity-50;
+    @apply  outline-[var(--ring)] opacity-50;
   }
   body {
     @apply bg-background text-foreground;

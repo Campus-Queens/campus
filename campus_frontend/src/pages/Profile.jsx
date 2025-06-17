@@ -342,7 +342,7 @@ const Profile = () => {
       {/* Cover Photo Section */}
       <div 
         onClick={handleCoverPhotoClick}
-        className="relative h-64 bg-gray-200 cursor-pointer group"
+        className="relative h-32 sm:h-48 md:h-64 bg-gray-200 cursor-pointer group"
       >
         {coverPhoto ? (
           <img 
@@ -357,12 +357,12 @@ const Profile = () => {
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 sm:-mt-12 md:-mt-16">
         <div className="relative">
           {/* Profile Picture */}
           <div 
             onClick={handleProfileImageClick}
-            className="absolute -top-12 left-4 h-32 w-32 rounded-full border-4 border-white bg-white shadow-md cursor-pointer overflow-hidden"
+            className="absolute -top-6 sm:-top-8 md:-top-12 left-2 sm:left-4 h-20 w-20 sm:h-24 sm:w-24 md:h-32 md:w-32 rounded-full border-4 border-white bg-white shadow-md cursor-pointer overflow-hidden"
           >
             {profileImage ? (
                 <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
@@ -374,7 +374,7 @@ const Profile = () => {
                 />
               ) : (
                 <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                  <span className="text-3xl text-gray-400">
+                  <span className="text-lg sm:text-xl md:text-3xl text-gray-400">
                     {user?.name?.[0]?.toUpperCase() || "?"}
                   </span>
                 </div>
@@ -382,10 +382,10 @@ const Profile = () => {
           </div>
 
           {/* Name and Buttons */}
-          <div className="pt-20 pb-4 flex items-start justify-between">
-            <div>
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold text-gray-900">
+          <div className="pt-12 sm:pt-16 md:pt-20 pb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                   {formData.name || "Student Name"}
                 </h1>
                 {/* Social Media Icons */}
@@ -395,46 +395,38 @@ const Profile = () => {
                   <SocialMediaIcon type="snapchat" link={formData.snapchat} />
                 </div>
               </div>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 {formData.major} {formData.yearOfStudy ? `- ${formData.yearOfStudy}` : ""}
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <div
                 onClick={handleLogout}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2 cursor-pointer"
+                className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center sm:justify-start space-x-2 cursor-pointer text-sm sm:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                 </svg>
                 <span>Logout</span>
               </div>
               <div
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 cursor-pointer"
+                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center sm:justify-start space-x-2 cursor-pointer text-sm sm:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
                 <span>Edit Profile</span>
-
-
               </div>
-                <div
-                  onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 cursor-pointer"
-                >
-                  <span>Post on Board</span>
-                </div>
             </div>
           </div>
 
           {/* Tabs */}
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
               <div
                 onClick={() => setActiveTab('about')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-sm cursor-pointer whitespace-nowrap ${
                   activeTab === 'about'
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -444,7 +436,7 @@ const Profile = () => {
               </div>
               <div
                 onClick={() => setActiveTab('listings')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-sm cursor-pointer whitespace-nowrap ${
                   activeTab === 'listings'
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -454,7 +446,7 @@ const Profile = () => {
               </div>
               <div
                 onClick={() => setActiveTab('saved')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-sm cursor-pointer whitespace-nowrap ${
                   activeTab === 'saved'
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -466,32 +458,32 @@ const Profile = () => {
           </div>
 
           {/* Tab Content */}
-          <div className="py-6">
+          <div className="py-4 sm:py-6">
             {activeTab === 'about' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* About Section */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">About</h2>
-                  <p className="text-gray-600 whitespace-pre-wrap">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">About</h2>
+                  <p className="text-sm sm:text-base text-gray-600 whitespace-pre-wrap">
                     {formData.bio || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."}
                   </p>
                 </div>
 
                 {/* Social Media Links */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h2>
-                  <div className="space-y-3">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Social Media</h2>
+                  <div className="space-y-2 sm:space-y-3">
                     {[
                       { name: 'Instagram', icon: 'instagram', link: formData.instagram },
                       { name: 'LinkedIn', icon: 'linkedin', link: formData.linkedin },
                       { name: 'Snapchat', icon: 'snapchat', link: formData.snapchat },
                     ].map((social) => (
                       <div key={social.name} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="w-6 h-6 flex items-center justify-center">
-                            <i className={`fab fa-${social.icon}`}></i>
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                          <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+                            <i className={`fab fa-${social.icon} text-sm sm:text-base`}></i>
                           </span>
-                          <span>{social.name}</span>
+                          <span className="text-sm sm:text-base">{social.name}</span>
                         </div>
                         {social.link ? (
                           <a
@@ -500,12 +492,12 @@ const Profile = () => {
                             rel="noopener noreferrer"
                             className="text-gray-400 hover:text-gray-600 cursor-pointer"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
                             </svg>
                           </a>
                         ) : (
-                          <span className="text-gray-400">Not provided</span>
+                          <span className="text-gray-400 text-sm sm:text-base">Not provided</span>
                         )}
                       </div>
                     ))}
@@ -513,9 +505,9 @@ const Profile = () => {
                 </div>
               </div>
             ) : activeTab === 'listings' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {userListings.length === 0 ? (
-                  <div className="col-span-full text-center py-8 text-gray-500">
+                  <div className="col-span-full text-center py-6 sm:py-8 text-gray-500 text-sm sm:text-base">
                     You haven't posted any listings yet
                   </div>
                 ) : (
@@ -531,13 +523,13 @@ const Profile = () => {
                         <img 
                           src={listing.image ? `http://localhost:8000/media/${listing.image.split('/media/')[1]}` : "/placeholder.png"} 
                           alt={listing.title} 
-                          className="w-full h-48 object-cover"
+                          className="w-full h-32 sm:h-40 md:h-48 object-cover"
                         />
-                        <div className="p-4">
-                          <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
+                        <div className="p-3 sm:p-4">
+                          <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-2 line-clamp-2">{listing.title}</h3>
                           <div className="flex items-center justify-between">
-                            <p className="text-gray-900 font-medium">${listing.price}</p>
-                            <p className="text-gray-500 text-sm">{new Date(listing.created_at).toLocaleDateString()}</p>
+                            <p className="text-gray-900 font-medium text-sm sm:text-base">${listing.price}</p>
+                            <p className="text-gray-500 text-xs sm:text-sm">{new Date(listing.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
                       </div>
@@ -546,10 +538,10 @@ const Profile = () => {
                           e.stopPropagation();
                           handleDeleteListing(listing.id);
                         }}
-                        className="absolute bottom-[74px] right-2 p-2 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity  hover:bg-gray-200"
+                        className="absolute bottom-[60px] sm:bottom-[74px] right-2 p-1.5 sm:p-2 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200"
                         title="Delete listing"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4 sm:size-6">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                         </svg>
                       </div>
@@ -558,9 +550,9 @@ const Profile = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {savedListings.length === 0 ? (
-                  <div className="col-span-full text-center py-8 text-gray-500">
+                  <div className="col-span-full text-center py-6 sm:py-8 text-gray-500 text-sm sm:text-base">
                     No saved listings yet
                   </div>
                 ) : (
@@ -574,20 +566,20 @@ const Profile = () => {
                         <img 
                           src={listing.image} 
                           alt={listing.title} 
-                          className="w-full h-48 object-cover"
+                          className="w-full h-32 sm:h-40 md:h-48 object-cover"
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-gray-400">
+                        <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-100 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                           </svg>
                         </div>
                       )}
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
+                      <div className="p-3 sm:p-4">
+                        <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-2 line-clamp-2">{listing.title}</h3>
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-900 font-medium">${listing.price}</p>
-                          <p className="text-gray-500 text-sm">{listing.seller_name}</p>
+                          <p className="text-gray-900 font-medium text-sm sm:text-base">${listing.price}</p>
+                          <p className="text-gray-500 text-xs sm:text-sm">{listing.seller_name}</p>
                         </div>
                       </div>
                     </div>
@@ -595,51 +587,6 @@ const Profile = () => {
                 )}
               </div>
             )}
-
-            {/* Resume Section - Always visible */}
-            <div className="mt-8 border-t border-gray-200 pt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resume</h2>
-              {formData.resume ? (
-                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center space-x-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-400">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{formData.resume.name}</p>
-                      <p className="text-xs text-gray-500">Last updated: {new Date(formData.resume.lastModified).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <div
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsResumeModalOpen(true);
-                      }}
-                      className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-                    >
-                      View
-                    </div>
-                    <a
-                      href={URL.createObjectURL(formData.resume)}
-                      download={formData.resume.name}
-                      className="px-3 py-1 text-sm text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-                    >
-                      Download
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                  <p className="mt-2 text-sm text-gray-600">No resume uploaded yet</p>
-                  <p className="text-xs text-gray-500">Upload your resume in the edit profile section</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
