@@ -1,13 +1,13 @@
 # ListingDetailDrawer Component
 
-A React Native drawer component that displays listing details in a bottom sheet modal, converted from the web ShadCN drawer component.
+A React Native drawer component that displays listing details in a bottom sheet modal. This is the **only** way to view listing details in the mobile app - there is no separate listing detail screen.
 
 ## Features
 
 - **Native Modal**: Uses React Native's built-in Modal component with slide animation
 - **Responsive Design**: Adapts to different screen sizes
-- **Related Listings**: Shows related listings in a horizontal scroll
-- **Action Buttons**: Message, Save, and Full Details actions
+- **Related Listings**: Shows related listings in a horizontal scroll (clicking opens the new listing in the same drawer)
+- **Action Buttons**: Message and Save actions
 - **Category Badges**: Color-coded category and condition badges
 - **Seller Information**: Displays seller profile with avatar
 - **Image Handling**: Supports listing images with placeholder fallback
@@ -31,6 +31,10 @@ const MyScreen = () => {
     setSelectedListing(null);
   };
 
+  const handleListingChange = (newListing: Listing) => {
+    setSelectedListing(newListing);
+  };
+
   return (
     <View>
       {/* Your listing cards */}
@@ -44,6 +48,7 @@ const MyScreen = () => {
           listing={selectedListing}
           isVisible={isDrawerVisible}
           onClose={handleDrawerClose}
+          onListingChange={handleListingChange}
         />
       )}
     </View>
@@ -58,6 +63,7 @@ const MyScreen = () => {
 | `listing` | `Listing \| null` | Yes | The listing object to display |
 | `isVisible` | `boolean` | Yes | Controls drawer visibility |
 | `onClose` | `() => void` | Yes | Callback when drawer is closed |
+| `onListingChange` | `(newListing: Listing) => void` | No | Callback when user selects a related listing |
 
 ## Styling
 
@@ -72,8 +78,7 @@ The component uses React Native StyleSheet with a design system that matches the
 
 The drawer integrates with React Navigation and provides navigation to:
 - Chat detail screen (for messaging)
-- Full listing detail screen
-- Related listings
+- Related listings (clicking opens the new listing in the same drawer)
 
 ## Dependencies
 

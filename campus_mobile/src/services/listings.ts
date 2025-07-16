@@ -96,6 +96,39 @@ export const listingsService = {
     }
   },
 
+  // Get filtered listings
+  async getFilteredListings(filters: {
+    categories?: string[];
+    minPrice?: string;
+    maxPrice?: string;
+  }): Promise<ListingResponse> {
+    try {
+      console.log('Fetching filtered listings:', filters);
+      const params = new URLSearchParams();
+      
+      if (filters.categories && filters.categories.length > 0) {
+        filters.categories.forEach(category => {
+          params.append('category', category);
+        });
+      }
+      
+      if (filters.minPrice) {
+        params.append('min_price', filters.minPrice);
+      }
+      
+      if (filters.maxPrice) {
+        params.append('max_price', filters.maxPrice);
+      }
+      
+      const response = await API.get(`/listings/?${params.toString()}`);
+      console.log('Filtered listings response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching filtered listings:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch filtered listings');
+    }
+  },
+
   // Get user's listings
   async getUserListings(): Promise<ListingResponse> {
     try {

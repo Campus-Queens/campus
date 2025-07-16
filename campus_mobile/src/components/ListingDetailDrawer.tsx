@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,14 +21,17 @@ interface ListingDetailDrawerProps {
   listing: Listing | null;
   isVisible: boolean;
   onClose: () => void;
+  onListingChange?: (newListing: Listing) => void;
 }
 
 const ListingDetailDrawer: React.FC<ListingDetailDrawerProps> = ({
   listing,
   isVisible,
   onClose,
+  onListingChange,
 }) => {
   const navigation = useNavigation();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [relatedListings, setRelatedListings] = useState<Listing[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
@@ -135,19 +138,18 @@ const ListingDetailDrawer: React.FC<ListingDetailDrawerProps> = ({
     onClose();
   };
 
-  const handleViewFullDetails = () => {
-    (navigation as any).navigate('ListingDetail', { id: listing.id });
-    onClose();
-  };
-
   const handleRelatedListingPress = (relatedListing: Listing) => {
-    // Close current drawer and open new one with related listing
-    onClose();
-    // You'd need to implement a way to show the new listing
-    // For now, navigate to the detail page
-    setTimeout(() => {
-      (navigation as any).navigate('ListingDetail', { id: relatedListing.id });
-    }, 300);
+    // If we have a callback to change the listing, use it
+    if (onListingChange) {
+      onListingChange(relatedListing);
+      // Scroll to top after a short delay to ensure the new content is loaded
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }, 100);
+    } else {
+      // Fallback: just close the drawer
+      onClose();
+    }
   };
 
   return (
@@ -165,7 +167,11 @@ const ListingDetailDrawer: React.FC<ListingDetailDrawerProps> = ({
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          ref={scrollViewRef}
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+        >
           {/* Image */}
           <View style={styles.imageContainer}>
             {listing.image ? (
@@ -315,14 +321,6 @@ const ListingDetailDrawer: React.FC<ListingDetailDrawerProps> = ({
             <Text style={[styles.actionButtonText, { color: isSaved ? "#ef4444" : "#374151" }]}>
               {isSaved ? 'Saved' : 'Save'}
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleViewFullDetails}
-          >
-            <Ionicons name="expand-outline" size={20} color="#374151" />
-            <Text style={styles.actionButtonText}>Full Details</Text>
           </TouchableOpacity>
         </View>
       </View>

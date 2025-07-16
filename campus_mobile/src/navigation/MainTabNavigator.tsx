@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
 import MessagesScreen from '../screens/MessagesScreen';
-import BoardScreen from '../screens/BoardScreen';
+import PostListingScreen from '../screens/PostListingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { MainTabParamList } from '../types';
 
@@ -20,8 +20,8 @@ const MainTabNavigator: React.FC = () => {
             iconName = focused ? 'storefront' : 'storefront-outline';
           } else if (route.name === 'Messages') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-          } else if (route.name === 'Board') {
-            iconName = focused ? 'bulb' : 'bulb-outline';
+          } else if (route.name === 'PostListing') {
+            iconName = focused ? 'add-circle' : 'add-circle-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -62,10 +62,10 @@ const MainTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen 
-        name="Board" 
-        component={BoardScreen}
+        name="PostListing" 
+        component={PostListingScreen}
         options={{
-          title: 'Board',
+          title: 'Post Listing',
         }}
       />
       <Tab.Screen 

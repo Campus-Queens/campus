@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { listingsService } from '../services/listings';
 import { Listing } from '../types';
 import ListingDetailDrawer from '../components/ListingDetailDrawer';
+import MarketplaceFilters from '../components/MarketplaceFilters';
 
 const { width } = Dimensions.get('window');
 
@@ -27,11 +28,27 @@ const MarketplaceScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState({
+    categories: [],
+    minPrice: '',
+    maxPrice: '',
+  });
 
-  const fetchListings = async () => {
+  const fetchListings = async (filters = currentFilters) => {
     try {
-      console.log('Fetching listings...');
-      const response = await listingsService.getListings();
+      console.log('Fetching listings with filters:', filters);
+      
+      // Check if we have any filters applied
+      const hasFilters = filters.categories.length > 0 || filters.minPrice || filters.maxPrice;
+      
+      let response;
+      if (hasFilters) {
+        response = await listingsService.getFilteredListings(filters);
+      } else {
+        response = await listingsService.getListings();
+      }
+      
       console.log('Listings response:', response);
       
       // Handle different possible response structures
@@ -81,12 +98,12 @@ const MarketplaceScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchListings();
+    fetchListings(currentFilters);
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchListings();
+    fetchListings(currentFilters);
   };
 
   const handleListingPress = (listing: Listing) => {
@@ -99,8 +116,22 @@ const MarketplaceScreen: React.FC = () => {
     setSelectedListing(null);
   };
 
-  const handlePostListing = () => {
-    (navigation as any).navigate('PostListing');
+  const handleListingChange = (newListing: Listing) => {
+    setSelectedListing(newListing);
+  };
+
+  const handleFilters = () => {
+    setIsFiltersVisible(true);
+  };
+
+  const handleApplyFilters = (filters: any) => {
+    setCurrentFilters(filters);
+    setLoading(true);
+    fetchListings(filters);
+  };
+
+  const handleCloseFilters = () => {
+    setIsFiltersVisible(false);
   };
 
   if (loading) {
@@ -120,7 +151,7 @@ const MarketplaceScreen: React.FC = () => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#ef4444" />
           <Text style={styles.errorText}>Error: {error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchListings}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => fetchListings(currentFilters)}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -133,8 +164,21 @@ const MarketplaceScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Marketplace</Text>
-        <TouchableOpacity style={styles.postButton} onPress={handlePostListing}>
-          <Ionicons name="add" size={24} color="#ffffff" />
+        <TouchableOpacity 
+          style={[
+            styles.postButton, 
+            (currentFilters.categories.length > 0 || currentFilters.minPrice || currentFilters.maxPrice) && styles.filterButtonActive
+          ]} 
+          onPress={handleFilters}
+        >
+          <Ionicons name="filter" size={24} color="#ffffff" />
+          {(currentFilters.categories.length > 0 || currentFilters.minPrice || currentFilters.maxPrice) && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>
+                {currentFilters.categories.length + (currentFilters.minPrice ? 1 : 0) + (currentFilters.maxPrice ? 1 : 0)}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -149,23 +193,10 @@ const MarketplaceScreen: React.FC = () => {
             <View style={styles.emptyContainer}>
               <Ionicons name="storefront-outline" size={64} color="#9ca3af" />
               <Text style={styles.emptyText}>No listings found</Text>
-              <Text style={styles.emptySubtext}>Be the first to post something!</Text>
+              <Text style={styles.emptySubtext}>Check back later for new listings</Text>
             </View>
           ) : (
             <View style={styles.grid}>
-              {/* Post Listing Card */}
-              <TouchableOpacity style={styles.postListingCard} onPress={handlePostListing}>
-                <View style={styles.postListingImage}>
-                  <Ionicons name="add-circle" size={48} color="#9ca3af" />
-                  <Text style={styles.postListingTitle}>Post Listing</Text>
-                  <Text style={styles.postListingSubtitle}>Sell What You Don't Need</Text>
-                </View>
-                <View style={styles.postListingContent}>
-                  <Text style={styles.postListingPrice}>Free</Text>
-                  <Text style={styles.postListingDescription}>Create your listing</Text>
-                </View>
-              </TouchableOpacity>
-
               {/* Listings Grid */}
               {Array.isArray(listings) && listings.map((listing) => (
                 <ListingCard 
@@ -184,8 +215,16 @@ const MarketplaceScreen: React.FC = () => {
           listing={selectedListing}
           isVisible={isDrawerVisible}
           onClose={handleDrawerClose}
+          onListingChange={handleListingChange}
         />
       )}
+
+      <MarketplaceFilters
+        isVisible={isFiltersVisible}
+        onClose={handleCloseFilters}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={currentFilters}
+      />
     </SafeAreaView>
   );
 };
@@ -339,6 +378,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#dc2626',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#dc2626',
+  },
+  filterBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#dc2626',
   },
   scrollView: {
     flex: 1,

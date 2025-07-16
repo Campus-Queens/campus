@@ -27,6 +27,43 @@ class ListingListCreateView(generics.ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
     
+    def get_queryset(self):
+        queryset = Listing.objects.all()
+        
+        # Debug logging
+        print(f"\n🔹 Filter Debug - Query Params: {self.request.query_params}")
+        
+        # Filter by categories
+        categories = self.request.query_params.getlist('category')
+        if categories:
+            print(f"  - Filtering by categories: {categories}")
+            queryset = queryset.filter(category__in=categories)
+        
+        # Filter by minimum price
+        min_price = self.request.query_params.get('min_price')
+        if min_price:
+            try:
+                min_price = float(min_price)
+                print(f"  - Filtering by min price: {min_price}")
+                queryset = queryset.filter(price__gte=min_price)
+            except ValueError:
+                print(f"  - Invalid min_price value: {min_price}")
+                pass
+        
+        # Filter by maximum price
+        max_price = self.request.query_params.get('max_price')
+        if max_price:
+            try:
+                max_price = float(max_price)
+                print(f"  - Filtering by max price: {max_price}")
+                queryset = queryset.filter(price__lte=max_price)
+            except ValueError:
+                print(f"  - Invalid max_price value: {max_price}")
+                pass
+        
+        print(f"  - Final queryset count: {queryset.count()}")
+        return queryset
+    
     def perform_create(self, serializer):
         print("\n🔹 Debug - Create Listing Request:")
         print(f"  - Files: {self.request.FILES}")

@@ -10,8 +10,6 @@ import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import MainTabNavigator from './MainTabNavigator';
-import ListingDetailScreen from '../screens/ListingDetailScreen';
-import PostListingScreen from '../screens/PostListingScreen';
 import EditListingScreen from '../screens/EditListingScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -47,8 +45,6 @@ const AppNavigator: React.FC = () => {
           // Main App Stack
           <>
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-            <Stack.Screen name="ListingDetail" component={ListingDetailScreen} />
-            <Stack.Screen name="PostListing" component={PostListingScreen} />
             <Stack.Screen name="EditListing" component={EditListingScreen} />
             <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />

@@ -88,8 +88,6 @@ export type RootStackParamList = {
   SignUp: { returnTo?: string } | undefined;
   ForgotPassword: undefined;
   MainTabs: undefined;
-  ListingDetail: { id: number };
-  PostListing: undefined;
   EditListing: { id: number };
   ChatDetail: { chatId: number; otherUser?: User };
   Profile: { userId?: number };
@@ -100,7 +98,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Marketplace: undefined;
   Messages: undefined;
-  Board: undefined;
+  PostListing: undefined;
   Profile: undefined;
 };
 
