@@ -1,6 +1,7 @@
+"use client";
+
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Checkbox } from "../components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -111,135 +112,159 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, onFiltersSubmit }) => {
   const form = useForm({
     defaultValues: {
       categories: [],
+      minPrice: '',
+      maxPrice: ''
     },
   });
 
-  // Watch for changes in categories
   useEffect(() => {
     const subscription = form.watch((value) => {
-      setSelectedCount(value.categories?.length || 0);
+      const categoryCount = value.categories?.length || 0;
+      const hasPriceRange = value.minPrice || value.maxPrice;
+      setSelectedCount(categoryCount + (hasPriceRange ? 1 : 0));
     });
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
-  const onSubmit = (data) => {
-    console.log('Submitting filters:', data);
-    onFiltersSubmit(data);
-  };
-
-  // Auto-submit when clicking category in collapsed mode
-  const handleCollapsedCategoryClick = (categoryId, currentValue) => {
-    const newCategories = currentValue?.includes(categoryId)
-      ? currentValue.filter(value => value !== categoryId)
+  const handleCategoryClick = (categoryId, currentValue) => {
+    const isSelected = currentValue?.includes(categoryId);
+    const newValue = isSelected
+      ? currentValue?.filter(value => value !== categoryId)
       : [...(currentValue || []), categoryId];
     
-    form.setValue('categories', newCategories);
-    onFiltersSubmit({ categories: newCategories });
+    form.setValue('categories', newValue);
+    
+    // Get current form values and submit
+    const currentValues = form.getValues();
+    onFiltersSubmit({
+      categories: newValue,
+      minPrice: currentValues.minPrice === '' ? null : Number(currentValues.minPrice),
+      maxPrice: currentValues.maxPrice === '' ? null : Number(currentValues.maxPrice)
+    });
+  };
+
+  const handlePriceChange = (field, value) => {
+    // Convert empty string to null, otherwise convert to number
+    const numValue = value === '' ? null : Number(value);
+    
+    // Only validate if both values are numbers
+    if (field === 'minPrice') {
+      const maxValue = form.getValues('maxPrice');
+      if (numValue !== null && maxValue !== null && numValue > maxValue) {
+        // Don't prevent typing, just don't apply the filter yet
+        form.setValue(field, numValue);
+        return;
+      }
+    }
+    if (field === 'maxPrice') {
+      const minValue = form.getValues('minPrice');
+      if (numValue !== null && minValue !== null && numValue < minValue) {
+        // Don't prevent typing, just don't apply the filter yet
+        form.setValue(field, numValue);
+        return;
+      }
+    }
+
+    // Update form value
+    form.setValue(field, numValue);
+    
+    // Get current form values and submit
+    const currentValues = form.getValues();
+    onFiltersSubmit({
+      categories: currentValues.categories || [],
+      minPrice: currentValues.minPrice === '' ? null : Number(currentValues.minPrice),
+      maxPrice: currentValues.maxPrice === '' ? null : Number(currentValues.maxPrice)
+    });
   };
 
   return (
     <div 
       className={`h-full border-r bg-white text-black transition-all duration-300 ease-in-out hidden sm:block ${
-        isCollapsed ? 'w-12' : 'w-64'
+        isCollapsed ? 'w-16' : 'w-64'
       }`}
     >
-      {/* Collapse Toggle Button */}
-      <div className="sticky top-0 flex justify-end p-2 border-b bg-white z-10">
+      <div className={`sticky top-0 flex items-center h-12 border-b bg-white z-10 ${
+        isCollapsed ? 'justify-center' : 'justify-between px-4'
+      }`}>
+        <h2 className={`font-semibold transition-all duration-200 ${
+          isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+        }`}>
+          Filters
+        </h2>
         <div
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 hover:bg-gray-100 rounded-md transition cursor-pointer"
+          className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-md transition cursor-pointer"
         >
-          {isCollapsed ? (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          {selectedCount > 0 ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M18.75 12.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5ZM12 6a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 12 6ZM12 18a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 12 18ZM3.75 6.75h1.5a.75.75 0 1 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5ZM5.25 18.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 0 1.5ZM3 12a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 3 12ZM9 3.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM12.75 12a2.25 2.25 0 1 1 4.5 0 2.25 2.25 0 0 1-4.5 0ZM9 15.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" />
             </svg>
           ) : (
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
             </svg>
           )}
         </div>
       </div>
       
-      {/* Filters Content */}
-      <div className={`${isCollapsed ? 'px-2' : 'p-4'}`}>
-        {!isCollapsed && <h2 className="font-semibold mb-4 transition-opacity duration-300">Filters</h2>}
-        
+      <div className={`${isCollapsed ? 'px-3' : 'px-3'}`}>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Categories */}
+          <form className="space-y-6">
             <div className="mb-6">
-              {!isCollapsed && <h3 className="font-medium mb-2 transition-opacity duration-300">Categories</h3>}
+              <h3 className={`font-medium mb-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
+                Categories
+              </h3>
               <FormField
                 control={form.control}
                 name="categories"
                 render={() => (
                   <FormItem>
-                    <div className={`${isCollapsed ? 'flex flex-col items-center space-y-1 mt-4' : 'space-y-2'}`}>
+                    <div className={`flex flex-col items-center ${isCollapsed ? 'space-y-0' : 'space-y-0.5'}`}>
                       {CATEGORIES.map((item) => (
                         <FormField
                           key={item.id}
                           control={form.control}
                           name="categories"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={item.id}
-                                className={`flex flex-row items-center ${isCollapsed ? 'justify-center' : 'space-x-2'} space-y-0`}
+                          render={({ field }) => (
+                            <FormItem className="w-full">
+                              <div 
+                                onClick={() => handleCategoryClick(item.id, field.value)}
+                                className="relative flex items-center cursor-pointer group"
                               >
-                                {isCollapsed ? (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div 
-                                          onClick={() => {
-                                            if (isCollapsed) {
-                                              handleCollapsedCategoryClick(item.id, field.value);
-                                            } else {
-                                              const isCurrentlyChecked = field.value?.includes(item.id);
-                                              const newValue = isCurrentlyChecked
-                                                ? field.value?.filter(value => value !== item.id)
-                                                : [...(field.value || []), item.id];
-                                              field.onChange(newValue);
-                                            }
-                                          }}
-                                          className={`p-1.5 rounded-md transition cursor-pointer hover:bg-gray-100 ${
-                                            field.value?.includes(item.id) ? 'text-black' : 'text-gray-500'
-                                          }`}
-                                        >
-                                          {field.value?.includes(item.id) ? item.icon.solid : item.icon.outline}
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="right">
-                                        {item.label}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ) : (
-                                  <>
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(item.id)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, item.id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== item.id
-                                                )
-                                              )
-                                        }}
-                                        className="rounded-sm"
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="text-sm font-normal leading-none cursor-pointer">
-                                      {item.label}
-                                    </FormLabel>
-                                  </>
-                                )}
-                              </FormItem>
-                            )
-                          }}
+                                <div 
+                                  className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-gray-100 cursor-pointer"
+                                >
+                                  <span className={`transition-colors duration-200 ${
+                                    field.value?.includes(item.id) 
+                                      ? 'text-black' 
+                                      : 'text-gray-400 group-hover:text-gray-600'
+                                  }`}>
+                                    {field.value?.includes(item.id) ? item.icon.solid : item.icon.outline}
+                                  </span>
+                                </div>
+                                <div 
+                                  className={`absolute left-12 transition-all duration-200 ease-in-out whitespace-nowrap ${
+                                    isCollapsed 
+                                      ? 'opacity-0 translate-x-[-8px] pointer-events-none' 
+                                      : 'opacity-100 translate-x-0'
+                                  }`}
+                                  style={{
+                                    transitionDelay: isCollapsed ? '0ms' : '100ms',
+                                    transitionProperty: 'opacity, transform',
+                                    willChange: 'opacity, transform'
+                                  }}
+                                >
+                                  <span 
+                                    className={`text-sm font-normal leading-none ${
+                                      field.value?.includes(item.id) ? 'text-black' : 'text-gray-600'
+                                    }`}
+                                  >
+                                    {item.label}
+                                  </span>
+                                </div>
+                              </div>
+                            </FormItem>
+                          )}
                         />
                       ))}
                     </div>
@@ -248,64 +273,60 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, onFiltersSubmit }) => {
               />
             </div>
 
-            {isCollapsed ? (
-              <div className="flex justify-center mt-4">
-                <div 
-                  onClick={form.handleSubmit(onSubmit)}
-                  className={`p-1.5 rounded-md transition cursor-pointer hover:bg-gray-100 ${
-                    selectedCount > 0 ? 'text-black' : 'text-gray-500'
-                  }`}
-                >
-                  {selectedCount > 0 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                      <path d="M18.75 12.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5ZM12 6a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 12 6ZM12 18a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 12 18ZM3.75 6.75h1.5a.75.75 0 1 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5ZM5.25 18.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 0 1.5ZM3 12a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 3 12ZM9 3.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM12.75 12a2.25 2.25 0 1 1 4.5 0 2.25 2.25 0 0 1-4.5 0ZM9 15.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-                    </svg>
+            <div className={`mb-6 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
+              <h3 className="font-medium mb-2">Price Range</h3>
+              <div className="flex space-x-2">
+                <FormField
+                  control={form.control}
+                  name="minPrice"
+                  render={({ field }) => (
+                    <FormItem className="w-1/2">
+                      <FormControl>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full px-3 py-2 border border-gray-300 border-solid rounded-md"
+                          placeholder="Min"
+                          value={field.value === null ? '' : field.value}
+                          onChange={(e) => handlePriceChange('minPrice', e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
+                />
+                <FormField
+                  control={form.control}
+                  name="maxPrice"
+                  render={({ field }) => (
+                    <FormItem className="w-1/2">
+                      <FormControl>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full px-3 py-2 border border-gray-300 border-solid rounded-md"
+                          placeholder="Max"
+                          value={field.value === null ? '' : field.value}
+                          onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {isCollapsed ? null : (
+              <div 
+                className={`transition-all duration-300 ${
+                  selectedCount > 0 
+                    ? 'opacity-100 translate-y-0 h-10' 
+                    : 'opacity-0 -translate-y-4 h-0 overflow-hidden'
+                }`}
+              >
+                <div className="text-sm text-gray-500">
+                  {selectedCount} {selectedCount === 1 ? 'filter' : 'filters'} selected
                 </div>
               </div>
-            ) : (
-              <>
-                {/* Search and Price Range */}
-
-
-                  {/* Price Range */}
-                  <div className="mb-6">
-                    <h3 className="font-medium mb-2">Price Range</h3>
-                    <div className="flex space-x-2">
-                      <input
-                        type="number"
-                        className="w-1/2 px-3 py-2 border rounded-md"
-                        placeholder="Min"
-                      />
-                      <input
-                        type="number"
-                        className="w-1/2 px-3 py-2 border rounded-md"
-                        placeholder="Max"
-                      />
-                    </div>
-                  </div>
-
-
-                {/* Apply Filters Button */}
-                <div 
-                  className={`transition-all duration-300 ${
-                    selectedCount > 0 
-                      ? 'opacity-100 translate-y-0 h-10' 
-                      : 'opacity-0 -translate-y-4 h-0 overflow-hidden'
-                  }`}
-                >
-                  <button 
-                    type="submit"
-                    className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition"
-                  >
-                    Apply Filters ({selectedCount} selected)
-                  </button>
-                </div>
-              </>
             )}
           </form>
         </Form>

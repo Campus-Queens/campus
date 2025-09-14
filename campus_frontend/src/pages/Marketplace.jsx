@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from "../components/Sidebar";
 import BookCard from "../components/BookCard";
+import MobileListingDrawer from "../components/MobileListingDrawer";
 import { listingsService } from '../services/listingsService';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
@@ -14,7 +15,25 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [priceRange, setPriceRange] = useState({ minPrice: null, maxPrice: null });
   const { searchTerm } = useSearch();
+  
+  // Mobile drawer state
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchListings = async () => {
     try {
@@ -43,12 +62,33 @@ const Marketplace = () => {
       listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.price.toString().includes(searchTerm);
     
-    return matchesCategories && matchesSearch;
+    // Add price range filtering
+    const price = Number(listing.price);
+    const matchesPriceRange = (
+      (priceRange.minPrice === null || price >= priceRange.minPrice) &&
+      (priceRange.maxPrice === null || price <= priceRange.maxPrice)
+    );
+    
+    return matchesCategories && matchesSearch && matchesPriceRange;
   });
 
   const handleFiltersSubmit = (filters) => {
     console.log('Applying filters:', filters);
     setSelectedCategories(filters.categories || []);
+    setPriceRange({
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice
+    });
+  };
+
+  const handleListingClick = (listing) => {
+    setSelectedListing(listing);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setSelectedListing(null);
   };
 
   if (loading) {
@@ -132,12 +172,20 @@ const Marketplace = () => {
                 {...listing}
                 image={listing.image}
                 seller={listing.seller}
+                onClick={() => handleListingClick(listing)}
               />
               ))}
             </div>
           )}
         </div>
       </main>
+      
+      {/* Mobile Listing Drawer */}
+      <MobileListingDrawer
+        listing={selectedListing}
+        isOpen={isDrawerOpen}
+        onClose={handleDrawerClose}
+      />
     </div>
   );
 };
