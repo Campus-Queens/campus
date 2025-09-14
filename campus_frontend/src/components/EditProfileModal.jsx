@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { API_URL } from '../config';
 
 const EditProfileModal = ({
@@ -13,8 +13,6 @@ const EditProfileModal = ({
   handleImageChange,   
 }) => {
   if (!isOpen) return null;
-  const resumeInputRef = useRef(null);
-  const coverLetterInputRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,12 +23,6 @@ const EditProfileModal = ({
     onClose();
   };
 
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, [type]: file });
-    }
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -59,13 +51,25 @@ const EditProfileModal = ({
                   <img
                     src={profileImage || (user?.profile_picture && `${API_URL.replace('/api', '')}${user.profile_picture}`)}
                     alt="Profile"
-                    className="h-16 w-16 rounded-full object-cover bg-gray-200"
+                    className="h-12 w-12 rounded-full object-cover bg-gray-200"
                   />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, 'profile')}
-                  />
+                  <div className="flex-1">
+                    <label className="cursor-pointer">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 mx-auto text-gray-400 mb-1">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-xs text-gray-600 font-medium">Upload Profile Picture</p>
+                        <p className="text-xs text-gray-500">JPG, PNG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'profile')}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -78,11 +82,23 @@ const EditProfileModal = ({
                     alt="Cover"
                     className="h-16 w-28 rounded object-cover bg-gray-200"
                   />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, 'cover')}
-                  />
+                  <div className="flex-1">
+                    <label className="cursor-pointer">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 mx-auto text-gray-400 mb-1">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-xs text-gray-600 font-medium">Upload Cover Picture</p>
+                        <p className="text-xs text-gray-500">JPG, PNG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'cover')}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -133,10 +149,11 @@ const EditProfileModal = ({
             </div>
 
             {/* Resume and Cover Letter */}
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Documents</h3>
               <div className="grid grid-cols-2 gap-4">
                 {/* Resume Upload */}
+                {/*
                 <div 
                   onClick={() => resumeInputRef.current.click()}
                   className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors"
@@ -177,8 +194,6 @@ const EditProfileModal = ({
                   </p>
                   <p className="text-xs text-gray-500">PDF, DOC, DOCX</p>
                 </div> */}
-              </div>
-            </div>
 
             {/* Social Media Links */}
             <div className="space-y-4">

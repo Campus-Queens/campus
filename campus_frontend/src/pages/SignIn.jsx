@@ -69,7 +69,7 @@ const SignIn = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-black"
             />
     
             <div className="relative">
@@ -79,7 +79,7 @@ const SignIn = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-black"
               />
               <ShowHideButton
                 showPassword={showPassword}

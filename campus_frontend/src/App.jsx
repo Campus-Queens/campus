@@ -17,11 +17,8 @@ import ResetPassword from "./pages/ResetPassword";
 import "./index.css";
 import { SearchProvider } from './context/SearchContext';
 
-// Wrapper component to handle conditional footer rendering
+// Wrapper component to handle routing
 const AppContent = () => {
-  const location = useLocation();
-  const showFooter = location.pathname === '/profile';
-
   return (
     <div className="flex flex-col h-screen">
       <Header />
@@ -42,7 +39,6 @@ const AppContent = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Routes>
       </div>
-      {showFooter && <Footer />}
     </div>
   );
 };
